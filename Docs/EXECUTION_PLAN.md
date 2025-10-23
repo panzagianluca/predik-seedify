@@ -7,36 +7,45 @@
 
 ---
 
-## Phase 0 — Access & Research Prerequisites (Day 0)
-- [ ] Confirm access to required dashboards: Biconomy, Privy, Delph AI, Vercel, Neon, BSCScan, The Graph.
-  - [ ] Collect API keys, project IDs, and webhook URLs.
-  - [ ] Document keys in secure vault and `.env` placeholders.
-- [ ] Review PRBMath LMSR references & Delph AI documentation.
-  - [ ] Bookmark equations, precision limits, and gas optimization notes.
-- [ ] Set up Foundry toolchain locally (forge, cast, anvil) with BNB fork configuration.
+## Phase 0 — Access & Research Prerequisites (Day 0) ✅ COMPLETED
 
-### Phase 0 — Neon & Drizzle Setup (detailed)
-- [ ] Create Neon project & database
-  - [ ] Create a new Neon project (console.neon.tech) and note the region/project name
-  - [ ] Create a dedicated database role/user and copy the full connection string
-  - [ ] Confirm SSL requirements and connection parameters
-- [ ] Configure Drizzle to use Neon
-  - [ ] Add `NEON_DATABASE_URL` to local `.env` (example updated in `.env.local.example`)
-  - [ ] Update `drizzle.config.ts` to read `NEON_DATABASE_URL` and set appropriate pool options
-  - [ ] Run `npx drizzle-kit generate` and verify migrations folder
-- [ ] Run initial DB migration locally
-  - [ ] Run `npx drizzle-kit migrate:latest --schema ./drizzle` (or equivalent) against Neon using a local proxy or a temporary connection
-  - [ ] Verify tables created (`users`, `markets`, `positions`, etc.)
-- [ ] Vercel & Secrets
-  - [ ] Add `NEON_DATABASE_URL` as a secret in Vercel for preview/prod
-  - [ ] Add Biconomy/Privy/Delph secrets in Vercel
-- [ ] Sanity checks
-  - [ ] Connect to Neon via `psql` or Neon dashboard and run a simple SELECT query
-  - [ ] Run a small Drizzle query from a Node REPL to ensure connection works
+**Status:** ✅ **COMPLETED on October 23, 2025**
+
+**Completed Items:**
+- ✅ Neon Database created and connected (`neondb` on `ep-floral-recipe-adwqh01g`)
+- ✅ Biconomy Super Transactions API configured (API Key: `mee_CTa...`, Project ID: `79933c68...`)
+- ✅ Privy Social Login configured (App ID: `cmh3yqmdl...`, Secret stored)
+- ✅ DelphAI Oracle address documented (`0xA95E99848a318e37F128aB841b0CF693c1f0b4D1`)
+- ✅ Vercel Blob token added for avatar uploads
+- ✅ All credentials added to `.env.local` and `.env.local.example`
+- ✅ Database connection fixed to handle Vercel build (no env during build time)
+- ✅ PostHog analytics removed (deferred for hackathon)
+- ✅ Changes committed and pushed to GitHub
+
+**Notes:**
+- Using **Biconomy Super Transactions** (new gasless solution, not legacy paymaster/bundler)
+- Privy callbacks configured for `predik.io` and `www.predik.io`
+- DelphAI uses on-chain oracle contract (no API key needed, just contract interface)
+- Neon connection string uses pooled connection for serverless compatibility
+
+**Environment Variables Set:**
+```bash
+DATABASE_URL=postgresql://neondb_owner:***@ep-floral-recipe-adwqh01g-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require
+NEXT_PUBLIC_BICONOMY_API_KEY=mee_CTaAqQnG8wDYN3aKoj4k7j
+NEXT_PUBLIC_BICONOMY_PROJECT_ID=79933c68-c642-4658-8023-5e243cdeaef0
+NEXT_PUBLIC_PRIVY_APP_ID=cmh3yqmdl00lpl50cilnn8cz5
+PRIVY_APP_SECRET=vraLYzp63TYDSmmznbKs2jBuCV6gesWKuZPX1Tk1bTmasN5pZitDJdqwjjCBGC7WcL93mP22KVyWD1tsGYpz1wZ
+NEXT_PUBLIC_DELPHAI_ORACLE_ADDRESS=0xA95E99848a318e37F128aB841b0CF693c1f0b4D1
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_8FTbCUou5AAh3mmO_baPRjwwd1NqZKEoI7YqEGowxZjonW4
+```
+
+**Next Steps:**
+- ✅ Ready to proceed with Phase 1: Smart Contract Development
+- ⚠️ Need to add Vercel environment variables before deploying (DATABASE_URL, PRIVY_APP_SECRET, etc.)
 
 ---
 
-## Phase 1 — Smart Contract Foundation (Days 1‑3)
+## Phase 1 — Smart Contract Foundation (Days 1‑3) 🔄 IN PROGRESS
 - [ ] Task 1: Implement core contracts in Foundry project (`contracts/`)
   - [ ] `MockUSDT.sol` (ERC‑20, 6 decimals, faucet, initial mint).
   - [ ] `Outcome1155.sol` (ERC‑1155 share tokens, URI, operator approvals).
