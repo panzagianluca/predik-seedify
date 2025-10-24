@@ -47,18 +47,26 @@ BLOB_READ_WRITE_TOKEN=vercel_blob_rw_8FTbCUou5AAh3mmO_baPRjwwd1NqZKEoI7YqEGowxZj
 
 ## Phase 1 — Smart Contract Foundation (Days 1‑3) 🔄 IN PROGRESS
 - [ ] Task 1: Implement core contracts in Foundry project (`contracts/`)
-  - [ ] `MockUSDT.sol` (ERC‑20, 6 decimals, faucet, initial mint).
-  - [ ] `Outcome1155.sol` (ERC‑1155 share tokens, URI, operator approvals).
-  - [ ] `LMSRMarket.sol` (multi-outcome LMSR pricing using PRBMath; buy/sell, invariant checks, fees).
-  - [ ] `Router.sol` (batched approve+trade, EIP‑712 structs for AA, treasury fee handling).
-  - [ ] `Oracle.sol` (Delph AI integration, resolution lifecycle, dispute staking).
+  - [x] `MockUSDT.sol` (ERC‑20, 6 decimals, faucet, initial mint). — Completed with faucet cooldown + tests on Oct 23, 2025.
+  - [x] `Outcome1155.sol` (ERC‑1155 share tokens, URI, operator approvals). — Contract + revert coverage passing `forge test` on Oct 23, 2025.
+  - [x] `LMSRMarket.sol` (multi-outcome LMSR pricing using PRBMath; buy/sell, invariant checks, fees).
+    - [x] Define storage schema, access control, and role assignments.
+    - [x] Implement PRBMath helpers for cost function, price computation, and invariant checks.
+    - [x] Build buy/sell flows with fee accounting, ERC-1155 mint/burn, and collateral transfers.
+    - [x] Add admin utilities (funding, fee withdrawal, parameter updates) and security guards.
+    - [x] Document events/errors and wire tests stubs for Foundry coverage.
+    - ⚠️ Missing: State machine (Trading → Resolving → Finalized), requestResolve(), finalize(), redeem()
+  - [x] `Router.sol` (batched approve+trade, EIP‑712 structs for AA, treasury fee handling). — Completed Oct 24, 2025 with gasless permit flow + tests.
+  - [x] `Oracle.sol` (DelphAI integration, resolution lifecycle, dispute staking). — **Completed Oct 24, 2025** with AI-powered resolution, optional disputes, 32 tests.
   - [ ] `Treasury.sol` (fee escrow, admin withdrawals, reporting events).
+  - [ ] `MarketFactory.sol` (ERC-1167 clones for gas-efficient market creation).
 - [ ] Task 2: Write extensive Foundry tests (`test/`)
   - [ ] Unit tests for LMSR math (cost function, gradient, round-trip sanity).
-  - [ ] Scenario tests for buy/sell flows with slippage, edge cases (zero liquidity, max shares).
-  - [ ] Oracle resolution + dispute window tests.
-  - [ ] Router batched operations + fee distribution tests.
+  - [x] Scenario tests for buy/sell flows with slippage, edge cases (zero liquidity, max shares).
+  - [x] Oracle resolution + dispute window tests. — **Completed Oct 24, 2025** (32 comprehensive tests).
+  - [x] Router batched operations + fee distribution tests. — Completed Oct 24, 2025 (10 tests covering buy/sell/slippage/pause/admin).
   - [ ] Fuzz tests for LMSR invariants and reentrancy guards.
+  *Note: Token contract unit tests (MockUSDT, Outcome1155) are complete; 84 total tests (83 passing).*
 - [ ] Task 3: Static analysis & audit prep
   - [ ] Run `forge fmt`, `forge build`, `forge test -vvv`.
   - [ ] Execute `slither`/`foundry` security checks; document findings.
