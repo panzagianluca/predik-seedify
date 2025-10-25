@@ -5,7 +5,7 @@
 
 import { createPublicClient, http, Address } from 'viem'
 import { bscTestnet } from 'viem/chains'
-import { MARKET_FACTORY_ABI } from '@/lib/abis/MarketFactory'
+import { MARKET_FACTORY_ABI } from '@/lib/abis'
 
 const publicClient = createPublicClient({
   chain: bscTestnet,
@@ -39,7 +39,7 @@ export async function getMarketCount(): Promise<number> {
     const count = await publicClient.readContract({
       address: MARKET_FACTORY_ADDRESS,
       abi: MARKET_FACTORY_ABI,
-      functionName: 'marketCount',
+      functionName: 'getMarketCount',
     })
     return Number(count)
   } catch (error) {
@@ -56,7 +56,7 @@ export async function getMarketById(marketId: number): Promise<Address | null> {
     const market = await publicClient.readContract({
       address: MARKET_FACTORY_ADDRESS,
       abi: MARKET_FACTORY_ABI,
-      functionName: 'markets',
+      functionName: 'getMarket',
       args: [BigInt(marketId)],
     })
     return market as Address

@@ -257,111 +257,118 @@ export function MobileTradingModal({
     haptics.medium()
 
     try {
-      const polkamarketsjs = await import('./polkamarkets-stub')
-      const web3Module = await import('web3')
-      const Web3 = web3Module.default || web3Module
+      // TODO: Update to use custom MarketFactory contracts + Wagmi hooks instead of Polkamarkets SDK
+      // The Polkamarkets SDK stubs don't match the full API.
+      // For now, trading functionality is disabled to unblock Vercel builds.
+      
+      // const polkamarketsjs = await import('./polkamarkets-stub')
+      // const web3Module = await import('web3')
+      // const Web3 = web3Module.default || web3Module
 
-      const polkamarkets = new polkamarketsjs.Application({
-        web3Provider: window.ethereum,
-      })
+      // const polkamarkets = new polkamarketsjs.Application({
+      //   web3Provider: window.ethereum,
+      // })
 
-      const web3 = new Web3(window.ethereum as any)
-      ;(window as any).web3 = web3
-      ;(polkamarkets as any).web3 = web3
+      // const web3 = new Web3(window.ethereum as any)
+      // ;(window as any).web3 = web3
+      // ;(polkamarkets as any).web3 = web3
 
-      await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // await window.ethereum.request({ method: 'eth_requestAccounts' })
 
-      const predictionMarket = polkamarkets.getPredictionMarketV3PlusContract({
-        contractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || '',
-        querierContractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_QUERIER || '',
-      })
+      // const predictionMarket = polkamarkets.getPredictionMarketV3PlusContract({
+      //   contractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || '',
+      //   querierContractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_QUERIER || '',
+      // })
 
-      const erc20 = polkamarkets.getERC20Contract({
-        contractAddress: market.token.address,
-      })
+      // const erc20 = polkamarkets.getERC20Contract({
+      //   contractAddress: market.token.address,
+      // })
 
-      const tradeAmount = parseFloat(amount)
+      // const tradeAmount = parseFloat(amount)
 
-      console.log('💰 Executing trade:', {
-        tradeType,
-        marketId: market.id,
-        outcomeId: selectedOutcome.id,
-        amount: tradeAmount,
-      })
+      // console.log('💰 Executing trade:', {
+      //   tradeType,
+      //   marketId: market.id,
+      //   outcomeId: selectedOutcome.id,
+      //   amount: tradeAmount,
+      // })
 
-      if (tradeType === 'buy') {
-        // Check and approve if needed (same as desktop)
-        const spenderAddress = process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || ''
-        const isApproved = await erc20.isApproved({
-          address: userAddress,
-          amount: tradeAmount,
-          spenderAddress,
-        })
+      // if (tradeType === 'buy') {
+      //   // Check and approve if needed (same as desktop)
+      //   const spenderAddress = process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || ''
+      //   const isApproved = await erc20.isApproved({
+      //     address: userAddress,
+      //     amount: tradeAmount,
+      //     spenderAddress,
+      //   })
 
-        console.log('💰 Token approval status:', { isApproved, spenderAddress, amount: tradeAmount })
+      //   console.log('💰 Token approval status:', { isApproved, spenderAddress, amount: tradeAmount })
 
-        if (!isApproved) {
-          console.log('⏳ Approving token spend...')
-          await erc20.approve({
-            address: spenderAddress,
-            amount: tradeAmount * 10,
-          })
-          console.log('✅ Approval complete')
-        }
+      //   if (!isApproved) {
+      //     console.log('⏳ Approving token spend...')
+      //     await erc20.approve({
+      //       address: spenderAddress,
+      //       amount: tradeAmount * 10,
+      //     })
+      //     console.log('✅ Approval complete')
+      //   }
 
-        // Calculate shares with slippage (same as desktop)
-        const minShares = await predictionMarket.calcBuyAmount({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-        })
-        const minSharesWithSlippage = Number(minShares) * 0.98
+      //   // Calculate shares with slippage (same as desktop)
+      //   const minShares = await predictionMarket.calcBuyAmount({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //   })
+      //   const minSharesWithSlippage = Number(minShares) * 0.98
 
-        console.log('📊 Buy calculation:', {
-          minShares: Number(minShares),
-          minSharesWithSlippage,
-          slippage: '2%',
-        })
+      //   console.log('📊 Buy calculation:', {
+      //     minShares: Number(minShares),
+      //     minSharesWithSlippage,
+      //     slippage: '2%',
+      //   })
 
-        // Execute buy (same as desktop)
-        console.log('🔄 Executing buy transaction...')
-        const buyTx = await predictionMarket.buy({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-          minOutcomeSharesToBuy: minSharesWithSlippage,
-        })
+      //   // Execute buy (same as desktop)
+      //   console.log('🔄 Executing buy transaction...')
+      //   const buyTx = await predictionMarket.buy({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //     minOutcomeSharesToBuy: minSharesWithSlippage,
+      //   })
 
-        console.log('✅ Buy successful:', buyTx)
-        haptics.success()
-      } else {
-        // Execute sell (same as desktop)
-        const maxShares = await predictionMarket.calcSellAmount({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-        })
+      //   console.log('✅ Buy successful:', buyTx)
+      //   haptics.success()
+      // } else {
+      //   // Execute sell (same as desktop)
+      //   const maxShares = await predictionMarket.calcSellAmount({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //   })
 
-        console.log('📊 Sell calculation:', {
-          maxShares: Number(maxShares),
-        })
+      //   console.log('📊 Sell calculation:', {
+      //     maxShares: Number(maxShares),
+      //   })
 
-        console.log('🔄 Executing sell transaction...')
-        const sellTx = await predictionMarket.sell({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-          maxOutcomeSharesToSell: Number(maxShares),
-        })
+      //   console.log('🔄 Executing sell transaction...')
+      //   const sellTx = await predictionMarket.sell({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //     maxOutcomeSharesToSell: Number(maxShares),
+      //   })
 
-        console.log('✅ Sell successful:', sellTx)
-        haptics.success()
-      }
+      //   console.log('✅ Sell successful:', sellTx)
+      //   haptics.success()
+      // }
 
-      setAmount('')
-      setCalculation(null)
-      onTradeComplete?.()
-      onClose()
+      // setAmount('')
+      // setCalculation(null)
+      // onTradeComplete?.()
+      // onClose()
+      
+      haptics.error()
+      setError('⚠️ Trading functionality temporarily disabled.\n\nThis component uses the old Polkamarkets SDK which has been replaced by custom contracts.\n\nPlease use the desktop trading panel for now.')
     } catch (err: any) {
       console.error('Trade execution error:', err)
       haptics.error()

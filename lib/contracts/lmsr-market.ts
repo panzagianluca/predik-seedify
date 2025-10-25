@@ -6,7 +6,7 @@
 
 import { createPublicClient, http, Address, formatUnits, parseUnits } from 'viem'
 import { bscTestnet } from 'viem/chains'
-import { LMSR_MARKET_ABI } from '@/lib/abis/LMSRMarket'
+import { LMSR_MARKET_ABI } from '@/lib/abis'
 
 const publicClient = createPublicClient({
   chain: bscTestnet,
@@ -188,7 +188,7 @@ export async function previewBuyCost(
   marketAddress: Address,
   outcomeIndex: number,
   shares: string // formatted amount (e.g., "10.5")
-): Promise<{ cost: string; fee: string } | null> {
+): Promise<{ cost: string; fee: string; total: string } | null> {
   try {
     const sharesWei = parseUnits(shares, 18)
     
@@ -197,11 +197,12 @@ export async function previewBuyCost(
       abi: LMSR_MARKET_ABI,
       functionName: 'previewBuy',
       args: [outcomeIndex, sharesWei],
-    }) as [bigint, bigint] // [totalCost, fee]
+    }) as readonly [bigint, bigint, bigint] // [costRaw, feeRaw, totalRaw]
 
     return {
-      cost: formatUnits(result[0], 6), // USDT amount
-      fee: formatUnits(result[1], 6),
+      cost: formatUnits(result[0], 6), // Cost before fees (USDT)
+      fee: formatUnits(result[1], 6),  // Fee amount (USDT)
+      total: formatUnits(result[2], 6), // Total cost including fees (USDT)
     }
   } catch (error) {
     console.error(`Error previewing buy cost:`, error)
@@ -216,7 +217,7 @@ export async function previewSellProceeds(
   marketAddress: Address,
   outcomeIndex: number,
   shares: string // formatted amount
-): Promise<{ proceeds: string; fee: string } | null> {
+): Promise<{ gross: string; fee: string; net: string } | null> {
   try {
     const sharesWei = parseUnits(shares, 18)
     
@@ -225,11 +226,12 @@ export async function previewSellProceeds(
       abi: LMSR_MARKET_ABI,
       functionName: 'previewSell',
       args: [outcomeIndex, sharesWei],
-    }) as [bigint, bigint] // [netPayout, fee]
+    }) as readonly [bigint, bigint, bigint] // [grossRaw, feeRaw, netRaw]
 
     return {
-      proceeds: formatUnits(result[0], 6), // USDT amount
-      fee: formatUnits(result[1], 6),
+      gross: formatUnits(result[0], 6), // Gross payout before fees (USDT)
+      fee: formatUnits(result[1], 6),   // Fee amount (USDT)
+      net: formatUnits(result[2], 6),   // Net payout after fees (USDT)
     }
   } catch (error) {
     console.error(`Error previewing sell proceeds:`, error)

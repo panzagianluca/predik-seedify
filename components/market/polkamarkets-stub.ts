@@ -6,24 +6,24 @@ export class Application {
   getERC20Contract(config: any) {
     return { 
       getTokenAmount: async (address?: any) => 0,
-      getContract: () => ({
+      getContract: (...args: any[]) => ({
         methods: {
-          balanceOf: () => ({ call: async () => '0' })
+          balanceOf: (...args: any[]) => ({ call: async () => '0' })
         }
       })
     }
   }
   getPredictionMarketV3PlusContract(config: any) {
     return {
-      getContract: () => ({
+      getContract: (...args: any[]) => ({
         methods: {
-          getUserMarketShares: (marketId?: any, address?: any) => ({ call: async () => [[], []] }),
+          getUserMarketShares: (...args: any[]) => ({ call: async () => [[], []] }),
         }
       }),
-      calcBuyAmount: async () => 0,
-      calcSellAmount: async () => 0,
-      buy: async () => ({ send: async () => ({}) }),
-      sell: async () => ({ send: async () => ({}) }),
+      calcBuyAmount: async (...args: any[]) => 0,
+      calcSellAmount: async (...args: any[]) => 0,
+      buy: async (...args: any[]) => ({ send: async () => ({}) }),
+      sell: async (...args: any[]) => ({ send: async () => ({}) }),
     }
   }
 }

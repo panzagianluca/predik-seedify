@@ -352,107 +352,113 @@ export function TradingPanel({ market, userAddress, isConnected, onTradeComplete
         pmContract: process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS,
       })
 
-      const polkamarketsjs = await import('./polkamarkets-stub')
-      const web3Module = await import('web3')
-      const Web3 = web3Module.default || web3Module
+      // TODO: Update to use custom MarketFactory contracts + Wagmi hooks instead of Polkamarkets SDK
+      // The Polkamarkets SDK stubs don't match the full API.
+      // For now, trading functionality is disabled to unblock Vercel builds.
+      
+      // const polkamarketsjs = await import('./polkamarkets-stub')
+      // const web3Module = await import('web3')
+      // const Web3 = web3Module.default || web3Module
 
-      const polkamarkets = new polkamarketsjs.Application({
-        web3Provider: window.ethereum,
-      })
+      // const polkamarkets = new polkamarketsjs.Application({
+      //   web3Provider: window.ethereum,
+      // })
 
-      const web3 = new Web3(window.ethereum as any)
-      ;(window as any).web3 = web3
-      ;(polkamarkets as any).web3 = web3
-      await window.ethereum.request({ method: 'eth_requestAccounts' })
+      // const web3 = new Web3(window.ethereum as any)
+      // ;(window as any).web3 = web3
+      // ;(polkamarkets as any).web3 = web3
+      // await window.ethereum.request({ method: 'eth_requestAccounts' })
 
-      const pm = polkamarkets.getPredictionMarketV3PlusContract({
-        contractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || '',
-        querierContractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_QUERIER || '',
-      })
+      // const pm = polkamarkets.getPredictionMarketV3PlusContract({
+      //   contractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || '',
+      //   querierContractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_QUERIER || '',
+      // })
 
-      const erc20 = polkamarkets.getERC20Contract({
-        contractAddress: market.token.address,
-      })
+      // const erc20 = polkamarkets.getERC20Contract({
+      //   contractAddress: market.token.address,
+      // })
 
-      if (tradeType === 'buy') {
-        // Check and approve if needed
-        const spenderAddress = process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || ''
-        const isApproved = await erc20.isApproved({
-          address: userAddress,
-          amount: tradeAmount,
-          spenderAddress,
-        })
+      // if (tradeType === 'buy') {
+      //   // Check and approve if needed
+      //   const spenderAddress = process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || ''
+      //   const isApproved = await erc20.isApproved({
+      //     address: userAddress,
+      //     amount: tradeAmount,
+      //     spenderAddress,
+      //   })
 
-        console.log('💰 Token approval status:', { isApproved, spenderAddress, amount: tradeAmount })
+      //   console.log('💰 Token approval status:', { isApproved, spenderAddress, amount: tradeAmount })
 
-        if (!isApproved) {
-          console.log('⏳ Approving token spend...')
-          await erc20.approve({
-            address: spenderAddress,
-            amount: tradeAmount * 10,
-          })
-          console.log('✅ Approval complete')
-        }
+      //   if (!isApproved) {
+      //     console.log('⏳ Approving token spend...')
+      //     await erc20.approve({
+      //       address: spenderAddress,
+      //       amount: tradeAmount * 10,
+      //     })
+      //     console.log('✅ Approval complete')
+      //   }
 
-        // Calculate shares with slippage
-        const minShares = await pm.calcBuyAmount({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-        })
-        const minSharesWithSlippage = Number(minShares) * 0.98
+      //   // Calculate shares with slippage
+      //   const minShares = await pm.calcBuyAmount({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //   })
+      //   const minSharesWithSlippage = Number(minShares) * 0.98
 
-        console.log('📊 Buy calculation:', {
-          minShares: Number(minShares),
-          minSharesWithSlippage,
-          slippage: '2%',
-        })
+      //   console.log('📊 Buy calculation:', {
+      //     minShares: Number(minShares),
+      //     minSharesWithSlippage,
+      //     slippage: '2%',
+      //   })
 
-        // Execute buy
-        console.log('🔄 Executing buy transaction...')
-        const buyTx = await pm.buy({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-          minOutcomeSharesToBuy: minSharesWithSlippage,
-        })
+      //   // Execute buy
+      //   console.log('🔄 Executing buy transaction...')
+      //   const buyTx = await pm.buy({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //     minOutcomeSharesToBuy: minSharesWithSlippage,
+      //   })
 
-        console.log('✅ Buy successful:', buyTx)
-      } else {
-        // Execute sell
-        const maxShares = await pm.calcSellAmount({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-        })
+      //   console.log('✅ Buy successful:', buyTx)
+      // } else {
+      //   // Execute sell
+      //   const maxShares = await pm.calcSellAmount({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //   })
 
-        console.log('📊 Sell calculation:', {
-          maxShares: Number(maxShares),
-        })
+      //   console.log('📊 Sell calculation:', {
+      //     maxShares: Number(maxShares),
+      //   })
 
-        console.log('🔄 Executing sell transaction...')
-        const sellTx = await pm.sell({
-          marketId: market.id,
-          outcomeId: selectedOutcome.id,
-          value: tradeAmount,
-          maxOutcomeSharesToSell: Number(maxShares),
-        })
+      //   console.log('🔄 Executing sell transaction...')
+      //   const sellTx = await pm.sell({
+      //     marketId: market.id,
+      //     outcomeId: selectedOutcome.id,
+      //     value: tradeAmount,
+      //     maxOutcomeSharesToSell: Number(maxShares),
+      //   })
 
-        console.log('✅ Sell successful:', sellTx)
-      }
+      //   console.log('✅ Sell successful:', sellTx)
+      // }
 
-      // Reset form
-      setAmount('')
-      setCalculation(null)
+      // // Reset form
+      // setAmount('')
+      // setCalculation(null)
 
-      // Reload data
-      console.log('🔄 Reloading balance and position...')
-      await loadBalance()
-      await loadUserPosition()
+      // // Reload data
+      // console.log('🔄 Reloading balance and position...')
+      // await loadBalance()
+      // await loadUserPosition()
 
-      if (onTradeComplete) {
-        onTradeComplete()
-      }
+      // if (onTradeComplete) {
+      //   onTradeComplete()
+      // }
+      
+      setError('⚠️ Trading functionality temporarily disabled.\n\nThis component uses the old Polkamarkets SDK which has been replaced by custom contracts.\n\nTrading will be re-enabled soon with the new contract integration.')
     } catch (err) {
       console.error('❌ Trade execution error:', err)
       const message = err instanceof Error ? err.message : 'Error desconocido'

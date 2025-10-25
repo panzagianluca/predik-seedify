@@ -217,62 +217,69 @@ export default function UITestPage() {
       const spenderAddress = process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS || ''
 
       // Check and approve if needed
-      const isApproved = await erc20.isApproved({
-        address: address,
-        amount: buyAmount,
-        spenderAddress,
-      })
+      // TODO: Update to use Wagmi for token approvals instead of Polkamarkets SDK
+      // const isApproved = await erc20.isApproved({
+      //   address: address,
+      //   amount: buyAmount,
+      //   spenderAddress,
+      // })
       
-      console.log('💰 Token approval status:', { isApproved, spenderAddress })
+      // console.log('💰 Token approval status:', { isApproved, spenderAddress })
 
-      if (!isApproved) {
-        console.log('⏳ Approving token spend...')
-        const approveTx = await erc20.approve({
-          address: spenderAddress,
-          amount: buyAmount * 10, // Approve 10x for multiple trades
-          callback: () => console.log('✅ Approval confirmed')
-        })
-        console.log('✅ Approval transaction:', approveTx)
-      }
+      // if (!isApproved) {
+      //   console.log('⏳ Approving token spend...')
+      //   const approveTx = await erc20.approve({
+      //     address: spenderAddress,
+      //     amount: buyAmount * 10, // Approve 10x for multiple trades
+      //     callback: () => console.log('✅ Approval confirmed')
+      //   })
+      //   console.log('✅ Approval transaction:', approveTx)
+      // }
 
+      // TODO: Update to use custom MarketFactory contracts + Wagmi hooks instead of Polkamarkets SDK
+      // The Polkamarkets SDK stubs don't match the full API and this test page is not used in production.
+      // For now, trading functionality is disabled to unblock Vercel builds.
+      
       // Calculate minimum shares to buy
-      const minShares = await pm.calcBuyAmount({
-        marketId: market.id,
-        outcomeId,
-        value: buyAmount,
-      })
+      // const minShares = await pm.calcBuyAmount({
+      //   marketId: market.id,
+      //   outcomeId,
+      //   value: buyAmount,
+      // })
       
-      // Apply 2% slippage tolerance (reduce minShares by 2%)
-      const minSharesWithSlippage = Number(minShares) * 0.98
+      // // Apply 2% slippage tolerance (reduce minShares by 2%)
+      // const minSharesWithSlippage = Number(minShares) * 0.98
       
-      console.log('📊 Calculated shares:', {
-        minShares,
-        minSharesNumber: Number(minShares),
-        minSharesWithSlippage,
-        slippageTolerance: '2%',
-        isValid: minSharesWithSlippage > 0
-      })
+      // console.log('📊 Calculated shares:', {
+      //   minShares,
+      //   minSharesNumber: Number(minShares),
+      //   minSharesWithSlippage,
+      //   slippageTolerance: '2%',
+      //   isValid: minSharesWithSlippage > 0
+      // })
 
-      if (minSharesWithSlippage <= 0) {
-        alert(`❌ Unable to calculate shares for this outcome.\n\nThis usually means:\n• Market is closed or resolved\n• Liquidity is too low\n• Outcome price is at extreme (0% or 100%)`)
-        return
-      }
+      // if (minSharesWithSlippage <= 0) {
+      //   alert(`❌ Unable to calculate shares for this outcome.\n\nThis usually means:\n• Market is closed or resolved\n• Liquidity is too low\n• Outcome price is at extreme (0% or 100%)`)
+      //   return
+      // }
 
-      console.log('🚀 Executing buy...', { marketId: market.id, outcomeId, value: buyAmount, minShares: minSharesWithSlippage })
+      // console.log('🚀 Executing buy...', { marketId: market.id, outcomeId, value: buyAmount, minShares: minSharesWithSlippage })
 
-      // Execute buy
-      const buyTx = await pm.buy({
-        marketId: market.id,
-        outcomeId,
-        value: buyAmount,
-        minOutcomeSharesToBuy: minSharesWithSlippage,
-      })
+      // // Execute buy
+      // const buyTx = await pm.buy({
+      //   marketId: market.id,
+      //   outcomeId,
+      //   value: buyAmount,
+      //   minOutcomeSharesToBuy: minSharesWithSlippage,
+      // })
       
-      console.log('✅ Buy transaction successful:', buyTx)
-      alert(`✅ Successfully bought shares for outcome ${outcomeId}!\n\nTx: ${buyTx?.transactionHash || 'pending'}\n\n🔄 Refreshing market data...`)
+      // console.log('✅ Buy transaction successful:', buyTx)
+      // alert(`✅ Successfully bought shares for outcome ${outcomeId}!\n\nTx: ${buyTx?.transactionHash || 'pending'}\n\n🔄 Refreshing market data...`)
       
-      // Refresh markets to show updated probabilities
-      await loadMarkets()
+      // // Refresh markets to show updated probabilities
+      // await loadMarkets()
+      
+      alert('⚠️ Trading functionality temporarily disabled.\n\nThis test page uses the old Polkamarkets SDK which has been replaced by custom contracts.\n\nPlease use the main markets page at /markets for trading.')
     } catch (err) {
       console.error('❌ Buy error:', err)
       const message = err instanceof Error ? err.message : 'Unknown error'
@@ -318,29 +325,35 @@ export default function UITestPage() {
         querierContractAddress: process.env.NEXT_PUBLIC_PREDICTION_MARKET_QUERIER || '',
       })
 
-      const sellAmount = 0.5 // Sell 0.5 tokens worth
-
-      // Calculate max shares to sell
-      const maxShares = await pm.calcSellAmount({
-        marketId: market.id,
-        outcomeId,
-        value: sellAmount,
-      })
-
-      console.log('Selling shares...', { marketId: market.id, outcomeId, value: sellAmount, maxShares })
-
-      // Execute sell
-      await pm.sell({
-        marketId: market.id,
-        outcomeId,
-        value: sellAmount,
-        maxOutcomeSharesToSell: maxShares,
-      })
-
-      alert(`✅ Successfully sold shares for outcome ${outcomeId}!\n\n🔄 Refreshing market data...`)
+      // TODO: Update to use custom MarketFactory contracts + Wagmi hooks instead of Polkamarkets SDK
+      // The Polkamarkets SDK stubs don't match the full API and this test page is not used in production.
+      // For now, trading functionality is disabled to unblock Vercel builds.
       
-      // Refresh markets to show updated probabilities
-      await loadMarkets()
+      // const sellAmount = 0.5 // Sell 0.5 tokens worth
+
+      // // Calculate max shares to sell
+      // const maxShares = await pm.calcSellAmount({
+      //   marketId: market.id,
+      //   outcomeId,
+      //   value: sellAmount,
+      // })
+
+      // console.log('Selling shares...', { marketId: market.id, outcomeId, value: sellAmount, maxShares })
+
+      // // Execute sell
+      // await pm.sell({
+      //   marketId: market.id,
+      //   outcomeId,
+      //   value: sellAmount,
+      //   maxOutcomeSharesToSell: maxShares,
+      // })
+
+      // alert(`✅ Successfully sold shares for outcome ${outcomeId}!\n\n🔄 Refreshing market data...`)
+      
+      // // Refresh markets to show updated probabilities
+      // await loadMarkets()
+      
+      alert('⚠️ Sell functionality temporarily disabled.\n\nThis test page uses the old Polkamarkets SDK which has been replaced by custom contracts.\n\nPlease use the main markets page at /markets for trading.')
     } catch (err) {
       console.error('Sell error:', err)
       alert(`Sell failed: ${err instanceof Error ? err.message : 'Unknown error'}`)
