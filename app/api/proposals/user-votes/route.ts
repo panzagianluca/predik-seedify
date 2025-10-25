@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       .where(eq(proposalVotes.voterAddress, normalizedAddress))
 
     // Return array of proposal IDs
-    const proposalIds = votes.map(v => v.proposalId)
+    const proposalIds = votes.map((v: { proposalId: string }) => v.proposalId)
     
     return NextResponse.json(proposalIds, {
       headers: {

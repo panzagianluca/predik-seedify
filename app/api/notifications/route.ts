@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       .limit(50)
 
     // Calculate unread count
-    const unreadCount = userNotifications.filter(n => !n.isRead).length
+    const unreadCount = userNotifications.filter((n: typeof notifications.$inferSelect) => !n.isRead).length
 
     return NextResponse.json({
       notifications: userNotifications,

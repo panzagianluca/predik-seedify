@@ -33,7 +33,8 @@ export const celoSepolia = defineChain({
 })
 
 // Get WalletConnect project ID from environment
-const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ''
+// Use a placeholder during build, will be replaced at runtime
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || '4d8c6b3a5f2e1d9c8b7a6f5e4d3c2b1a'
 
 // Configure wallet connectors using RainbowKit
 const connectors = connectorsForWallets(
@@ -62,6 +63,7 @@ export const config = createConfig({
     [celoSepolia.id]: http('https://forno.celo-sepolia.celo-testnet.org'),
     [celo.id]: http(),
   },
+  ssr: true,
 })
 
 declare module 'wagmi' {
