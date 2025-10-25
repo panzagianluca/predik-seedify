@@ -16,6 +16,7 @@ contract RouterTest is Test {
     address internal trader;
     address internal admin;
     address internal mockOracle;
+    address internal mockTreasury;
 
     uint256 internal constant MARKET_ID = 1;
     uint8 internal constant OUTCOME_COUNT = 3;
@@ -29,6 +30,7 @@ contract RouterTest is Test {
         trader = makeAddr("trader");
         admin = makeAddr("admin");
         mockOracle = makeAddr("mockOracle");
+        mockTreasury = makeAddr("mockTreasury");
 
         usdt = new MockUSDT();
         outcomeToken = new Outcome1155("https://api.predik.io/outcomes/{id}.json", address(this));
@@ -44,7 +46,8 @@ contract RouterTest is Test {
             address(usdt),
             address(outcomeToken),
             tradingEndsAt,
-            mockOracle
+            mockOracle,
+            mockTreasury
         );
 
         // Grant roles

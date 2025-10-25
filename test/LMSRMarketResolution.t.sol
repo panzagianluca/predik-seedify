@@ -15,6 +15,7 @@ contract LMSRMarketResolutionTest is Test {
     address internal trader2;
     address internal router;
     address internal mockOracle;
+    address internal mockTreasury;
 
     uint256 internal constant MARKET_ID = 1;
     uint8 internal constant OUTCOME_COUNT = 3;
@@ -28,6 +29,7 @@ contract LMSRMarketResolutionTest is Test {
         trader2 = makeAddr("trader2");
         router = makeAddr("router");
         mockOracle = makeAddr("mockOracle");
+        mockTreasury = makeAddr("mockTreasury");
 
         usdt = new MockUSDT();
         outcomeToken = new Outcome1155("https://api.predik.io/outcomes/{id}.json", router);
@@ -42,7 +44,8 @@ contract LMSRMarketResolutionTest is Test {
             address(usdt),
             address(outcomeToken),
             tradingEndsAt,
-            mockOracle
+            mockOracle,
+            mockTreasury
         );
 
         outcomeToken.grantRole(outcomeToken.MINTER_BURNER_ROLE(), address(market));
@@ -75,7 +78,7 @@ contract LMSRMarketResolutionTest is Test {
 
     function testRequestResolveRevertsBeforeTradingEnds() public {
         // Try to request resolution before trading ends
-        vm.expectRevert(LMSRMarket.LMSR_TradingEnded.selector);
+        vm.expectRevert(LMSRMarket.LMSR_TradingNotEndedYet.selector);
         market.requestResolve();
     }
 

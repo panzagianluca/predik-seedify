@@ -14,6 +14,7 @@ contract LMSRMarketTest is Test {
     address internal trader;
     address internal router;
     address internal mockOracle;
+    address internal mockTreasury;
 
     uint256 internal constant MARKET_ID = 1;
     uint8 internal constant OUTCOME_COUNT = 3;
@@ -27,6 +28,7 @@ contract LMSRMarketTest is Test {
         trader = makeAddr("trader");
         router = makeAddr("router");
         mockOracle = makeAddr("mockOracle");
+        mockTreasury = makeAddr("mockTreasury");
 
         usdt = new MockUSDT();
         outcomeToken = new Outcome1155("https://api.predik.io/outcomes/{id}.json", router);
@@ -40,7 +42,8 @@ contract LMSRMarketTest is Test {
             address(usdt),
             address(outcomeToken),
             tradingEndsAt,
-            mockOracle
+            mockOracle,
+            mockTreasury
         );
 
         outcomeToken.grantRole(outcomeToken.MINTER_BURNER_ROLE(), address(market));

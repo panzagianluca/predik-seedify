@@ -190,21 +190,15 @@ contract Router is ReentrancyGuard, AccessControl, IERC1155Receiver {
         return netPayout;
     }
 
-    /// @notice Execute multiple arbitrary calls in a single transaction.
-    /// @dev Each call is executed in sequence. If any call fails, the entire transaction reverts.
-    /// @param calls Array of encoded function calls to execute on this contract.
-    /// @return results Array of return data from each call.
-    function multicall(bytes[] calldata calls) external nonReentrant returns (bytes[] memory results) {
-        if (paused) revert Router_Paused();
-
-        results = new bytes[](calls.length);
-        for (uint256 i = 0; i < calls.length; i++) {
-            (bool success, bytes memory result) = address(this).delegatecall(calls[i]);
-            require(success, "Router: multicall failed");
-            results[i] = result;
-        }
-        return results;
-    }
+    // -------------------------------------------------------------------------
+    // REMOVED: multicall() function
+    // -------------------------------------------------------------------------
+    // The multicall function was removed due to delegatecall security vulnerability.
+    // Delegatecall executes arbitrary code in Router's context, allowing potential
+    // admin takeover attacks. Users should batch transactions via frontend or use
+    // individual calls. We may add a safer version in the future with whitelisted
+    // function selectors if batching is needed.
+    // -------------------------------------------------------------------------
 
     // -------------------------------------------------------------------------
     // View functions

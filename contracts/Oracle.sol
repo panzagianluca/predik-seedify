@@ -172,6 +172,12 @@ contract Oracle is AccessControl, ReentrancyGuard {
             revert Oracle_InvalidOutcome(uint8(delphMarket.outcomeIndex));
         }
 
+        // Validate outcome is within the market's valid range
+        uint8 marketOutcomeCount = ILMSRMarket(market).outcomeCount();
+        if (delphMarket.outcomeIndex >= marketOutcomeCount) {
+            revert Oracle_InvalidOutcome(uint8(delphMarket.outcomeIndex));
+        }
+
         // Store resolution data
         resolution.proposedOutcome = uint8(delphMarket.outcomeIndex);
         resolution.confidence = delphMarket.resolutionConfidence;
@@ -186,7 +192,7 @@ contract Oracle is AccessControl, ReentrancyGuard {
     /// @notice Dispute a resolution if confidence is below threshold
     /// @param market Address of the market to dispute
     /// @param altOutcome Alternative outcome being proposed
-    function dispute(address market, uint8 altOutcome) external payable nonReentrant {
+    function dispute(address market, uint8 altOutcome) external nonReentrant {
         Resolution storage resolution = resolutions[market];
 
         if (resolution.status != ResolutionStatus.Proposed) {
@@ -202,19 +208,25 @@ contract Oracle is AccessControl, ReentrancyGuard {
             revert Oracle_DisputeNotAllowed(resolution.confidence);
         }
 
+        // Validate alternative outcome is within range
+        uint8 marketOutcomeCount = ILMSRMarket(market).outcomeCount();
+        if (altOutcome >= marketOutcomeCount) {
+            revert Oracle_InvalidOutcome(altOutcome);
+        }
+
         // Calculate required dispute bond from market
         uint256 requiredBond = _calculateDisputeBond(market);
-        if (msg.value < requiredBond) {
-            revert Oracle_InsufficientDisputeBond(requiredBond, msg.value);
-        }
+        
+        // Transfer USDT bond from disputer
+        collateral.safeTransferFrom(msg.sender, address(this), requiredBond);
 
         // Store dispute data
         resolution.status = ResolutionStatus.Disputed;
         resolution.challenger = msg.sender;
         resolution.disputedOutcome = altOutcome;
-        resolution.disputeBond = msg.value;
+        resolution.disputeBond = requiredBond;
 
-        emit ResolutionDisputed(market, msg.sender, altOutcome, msg.value);
+        emit ResolutionDisputed(market, msg.sender, altOutcome, requiredBond);
     }
 
     /// @notice Finalize resolution after dispute window expires
@@ -268,18 +280,25 @@ contract Oracle is AccessControl, ReentrancyGuard {
             revert Oracle_ResolutionNotProposed(market);
         }
 
+        // Validate final outcome is within range (unless market is invalid)
+        if (!invalid) {
+            uint8 marketOutcomeCount = ILMSRMarket(market).outcomeCount();
+            if (finalOutcome >= marketOutcomeCount) {
+                revert Oracle_InvalidOutcome(finalOutcome);
+            }
+        }
+
         // Determine who was correct and handle bonds
         bool aiWasCorrect = (finalOutcome == resolution.proposedOutcome);
 
         if (aiWasCorrect) {
-            // Slash disputer's bond to treasury
-            (bool success,) = treasury.call{value: resolution.disputeBond}("");
-            require(success, "Oracle: treasury transfer failed");
+            // Slash disputer's bond to treasury (USDT)
+            // Transfer directly to treasury - Treasury will track this separately
+            collateral.safeTransfer(treasury, resolution.disputeBond);
             emit DisputeBondSlashed(market, resolution.challenger, resolution.disputeBond);
         } else {
-            // Return bond to challenger
-            (bool success,) = resolution.challenger.call{value: resolution.disputeBond}("");
-            require(success, "Oracle: challenger refund failed");
+            // Return bond to challenger (USDT)
+            collateral.safeTransfer(resolution.challenger, resolution.disputeBond);
             emit DisputeBondReturned(market, resolution.challenger, resolution.disputeBond);
         }
 
@@ -413,4 +432,10 @@ interface IDelphAI {
 interface ILMSRMarket {
     function finalize(uint8 winningOutcome, bool invalid) external;
     function getTotalVolume() external view returns (uint256);
+    function outcomeCount() external view returns (uint8);
+}
+
+/// @notice Treasury interface for bond collection
+interface ITreasury {
+    function collect(uint256 marketId, address token, uint256 amount) external;
 }

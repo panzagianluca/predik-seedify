@@ -66,6 +66,19 @@ Added state tracking:
   - Emits Redeemed event
 - **Gas**: ~260k (winner), ~470k (invalid pro-rata)
 
+#### 4. sweepFeesToTreasury(uint256 amount) ⭐ NEW (Oct 2025)
+- **Access**: Admin only (`DEFAULT_ADMIN_ROLE`)
+- **Purpose**: Send accumulated fees to Treasury for distribution
+- **Preconditions**:
+  - amount ≤ feeReserve
+  - amount = 0 sends all fees
+- **Actions**:
+  - Approves Treasury to spend collateral
+  - Calls `treasury.collect(marketId, collateral, amount)`
+  - Treasury handles 60/30/10 split (protocol/creator/oracle)
+  - Emits FeeSwept event
+- **Gas**: ~80k
+
 ### Trading Enforcement
 
 Updated buy() and sell() functions to enforce trading deadline:
@@ -75,7 +88,7 @@ Updated buy() and sell() functions to enforce trading deadline:
 
 ### Constructor Changes
 
-Updated to accept 8 parameters (was 6):
+Updated to accept **9 parameters** (was 6, then 8):
 ```solidity
 constructor(
     uint256 marketId_,
@@ -84,16 +97,23 @@ constructor(
     uint256 feeRaw,
     address collateral_,
     address outcomeToken_,
-    uint64 tradingEndsAt_,  // NEW
-    address oracle_          // NEW
+    uint64 tradingEndsAt_,   // Added in v1
+    address oracle_,         // Added in v1
+    address treasury_        // ⭐ NEW in v2 (Oct 2025)
 )
 ```
 
+**Latest Update (Oct 2025):**
+- Added `treasury` parameter for fee sweep functionality
+- Market can now call `treasury.collect()` to distribute fees
+- See `sweepFeesToTreasury()` function for fee collection mechanism
+
 ### Events
 
-Added two new events:
+Added resolution and fee events:
 - `Resolved(uint8 indexed winningOutcome, bool invalid)`
 - `Redeemed(address indexed user, uint8 indexed outcome, uint256 shares, uint256 payout)`
+- `FeeSwept(uint256 indexed marketId, uint256 amount, address treasury)` ⭐ NEW (Oct 2025)
 
 ### Errors
 
@@ -217,13 +237,17 @@ See `Oracle.sol` for full DelphAI integration implementation.
 ## Backwards Compatibility
 
 **Breaking changes**:
-- Constructor signature changed (6→8 params)
-- All existing tests updated (LMSRMarket.t.sol, Router.t.sol)
+- Constructor signature changed (6→8→9 params)
+  - v1: Added tradingEndsAt, oracle
+  - v2 (Oct 2025): Added treasury ⭐
+- All existing tests updated (LMSRMarket.t.sol, Router.t.sol, MarketFactory.t.sol)
 - Buy/sell functions now check trading deadline
+- Fee sweep mechanism requires treasury integration
 
 **Migration path**:
-- Update all market deployments to include tradingEndsAt and oracle
-- Existing tests need mockOracle setup
+- Update all market deployments to include tradingEndsAt, oracle, and treasury
+- Existing tests need mockOracle and mockTreasury setup
+- Frontend must call sweepFeesToTreasury() periodically for fee distribution
 
 ## Next Steps
 

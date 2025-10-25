@@ -6,7 +6,7 @@ import {Oracle, IDelphAI, Market, MarketStatus} from "../contracts/Oracle.sol";
 import {MockUSDT} from "../contracts/MockUSDT.sol";
 
 contract MockDelphAI is IDelphAI {
-    uint256 public marketCreationFee = 0.01 ether;
+    uint256 public marketCreationFee = 0; // No fee for testing (USDT-native, no ETH)
     uint256 public nextMarketId = 1;
 
     mapping(uint256 => Market) public markets;
@@ -17,7 +17,7 @@ contract MockDelphAI is IDelphAI {
         string[] memory possibleOutcomes,
         uint256 resolutionTimestamp
     ) external payable returns (uint256) {
-        require(msg.value >= marketCreationFee, "Insufficient fee");
+        // No fee required for testing
 
         uint256 marketId = nextMarketId++;
 
@@ -68,12 +68,18 @@ contract MockDelphAI is IDelphAI {
 
 contract MockLMSRMarket {
     uint256 public totalVolume;
+    uint8 public outcomeCount;
     uint8 public winningOutcome;
     bool public invalid;
     bool public finalized;
 
     constructor(uint256 _totalVolume) {
         totalVolume = _totalVolume;
+        outcomeCount = 2; // Default to 2 outcomes (Yes/No)
+    }
+
+    function setOutcomeCount(uint8 _outcomeCount) external {
+        outcomeCount = _outcomeCount;
     }
 
     function finalize(uint8 _winningOutcome, bool _invalid) external {
@@ -121,12 +127,12 @@ contract OracleTest is Test {
         // Deploy mock market
         market = new MockLMSRMarket(MARKET_VOLUME);
 
-        vm.stopPrank();
+        // Fund admin and users with USDT (not ETH anymore)
+        collateral.mint(admin, 10000e6);
+        collateral.mint(user1, 10000e6);
+        collateral.mint(user2, 10000e6);
 
-        // Fund admin and users with ETH
-        vm.deal(admin, 100 ether);
-        vm.deal(user1, 100 ether);
-        vm.deal(user2, 100 ether);
+        vm.stopPrank();
     }
 
     // -------------------------------------------------------------------------
@@ -213,7 +219,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -251,7 +257,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -269,7 +275,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -289,7 +295,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -317,7 +323,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -331,12 +337,14 @@ contract OracleTest is Test {
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
         assertEq(requiredBond, MARKET_VOLUME * DISPUTE_BOND_BPS / 10000);
 
-        // Dispute the resolution
-        vm.prank(user2);
+        // Dispute the resolution (approve USDT first)
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond);
         vm.expectEmit(true, true, false, false);
         emit ResolutionDisputed(address(market), user2, 1, requiredBond);
 
-        oracle.dispute{value: requiredBond}(address(market), 1);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
 
         // Verify dispute data
         (,,,, Oracle.ResolutionStatus status, uint256 bond, address challenger, uint8 altOutcome,) =
@@ -353,9 +361,11 @@ contract OracleTest is Test {
         oracle.registerMarket(address(market), 123);
         vm.stopPrank();
 
-        vm.prank(user1);
+        vm.startPrank(user1);
+        collateral.approve(address(oracle), 1e6);
         vm.expectRevert(abi.encodeWithSelector(Oracle.Oracle_ResolutionNotProposed.selector, address(market)));
-        oracle.dispute{value: 1 ether}(address(market), 1);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
     }
 
     function testDisputeRevertsWindowClosed() public {
@@ -365,7 +375,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -380,9 +390,11 @@ contract OracleTest is Test {
 
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
 
-        vm.prank(user2);
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond);
         vm.expectRevert(abi.encodeWithSelector(Oracle.Oracle_DisputeWindowClosed.selector, address(market)));
-        oracle.dispute{value: requiredBond}(address(market), 1);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
     }
 
     function testDisputeRevertsHighConfidence() public {
@@ -392,7 +404,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -404,9 +416,11 @@ contract OracleTest is Test {
 
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
 
-        vm.prank(user2);
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond);
         vm.expectRevert(abi.encodeWithSelector(Oracle.Oracle_DisputeNotAllowed.selector, 85));
-        oracle.dispute{value: requiredBond}(address(market), 1);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
     }
 
     function testDisputeRevertsInsufficientBond() public {
@@ -416,7 +430,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -428,11 +442,15 @@ contract OracleTest is Test {
 
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
 
-        vm.prank(user2);
-        vm.expectRevert(
-            abi.encodeWithSelector(Oracle.Oracle_InsufficientDisputeBond.selector, requiredBond, requiredBond - 1)
-        );
-        oracle.dispute{value: requiredBond - 1}(address(market), 1);
+        // Mint USDT for disputer but only approve insufficient amount
+        vm.prank(admin);
+        collateral.mint(user2, requiredBond);
+        
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond - 1);
+        vm.expectRevert(); // SafeERC20 will revert on insufficient allowance
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
     }
 
     // -------------------------------------------------------------------------
@@ -447,7 +465,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -484,7 +502,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -508,7 +526,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -520,8 +538,10 @@ contract OracleTest is Test {
 
         // Dispute it
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
-        vm.prank(user2);
-        oracle.dispute{value: requiredBond}(address(market), 1);
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
 
         // Fast forward
         vm.warp(block.timestamp + 25 hours);
@@ -544,7 +564,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -555,11 +575,13 @@ contract OracleTest is Test {
         oracle.requestResolve(address(market));
 
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
-        vm.prank(user2);
-        oracle.dispute{value: requiredBond}(address(market), 1);
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
 
         // Admin resolves: AI was correct
-        uint256 treasuryBalanceBefore = treasury.balance;
+        uint256 treasuryBalanceBefore = collateral.balanceOf(treasury);
 
         vm.prank(admin);
         vm.expectEmit(true, true, false, false);
@@ -567,8 +589,8 @@ contract OracleTest is Test {
 
         oracle.resolveDispute(address(market), 0, false);
 
-        // Verify bond was slashed to treasury
-        assertEq(treasury.balance, treasuryBalanceBefore + requiredBond);
+        // Verify bond was slashed to treasury (USDT)
+        assertEq(collateral.balanceOf(treasury), treasuryBalanceBefore + requiredBond);
 
         // Verify market finalized
         assertTrue(market.finalized());
@@ -583,7 +605,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -594,11 +616,13 @@ contract OracleTest is Test {
         oracle.requestResolve(address(market));
 
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
-        vm.prank(user2);
-        oracle.dispute{value: requiredBond}(address(market), 1);
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
 
         // Admin resolves: Challenger was correct
-        uint256 challengerBalanceBefore = user2.balance;
+        uint256 challengerBalanceBefore = collateral.balanceOf(user2);
 
         vm.prank(admin);
         vm.expectEmit(true, true, false, false);
@@ -606,8 +630,8 @@ contract OracleTest is Test {
 
         oracle.resolveDispute(address(market), 1, false);
 
-        // Verify bond was returned
-        assertEq(user2.balance, challengerBalanceBefore + requiredBond);
+        // Verify bond was returned (USDT)
+        assertEq(collateral.balanceOf(user2), challengerBalanceBefore + requiredBond);
 
         // Verify market finalized with challenger's outcome
         assertTrue(market.finalized());
@@ -622,7 +646,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -633,8 +657,10 @@ contract OracleTest is Test {
         oracle.requestResolve(address(market));
 
         uint256 requiredBond = oracle.calculateDisputeBond(address(market));
-        vm.prank(user2);
-        oracle.dispute{value: requiredBond}(address(market), 1);
+        vm.startPrank(user2);
+        collateral.approve(address(oracle), requiredBond);
+        oracle.dispute(address(market), 1);
+        vm.stopPrank();
 
         // Admin marks as invalid
         vm.prank(admin);
@@ -656,7 +682,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();
@@ -683,7 +709,7 @@ contract OracleTest is Test {
         outcomes[1] = "No";
 
         uint256 delphAIMarketId =
-            delphAI.createMarket{value: 0.01 ether}("Test question?", "Description", outcomes, block.timestamp + 1 days);
+            delphAI.createMarket("Test question?", "Description", outcomes, block.timestamp + 1 days);
 
         oracle.registerMarket(address(market), delphAIMarketId);
         vm.stopPrank();

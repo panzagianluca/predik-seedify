@@ -4,6 +4,7 @@ pragma solidity ^0.8.30;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {UD60x18, ud} from "@prb/math/UD60x18.sol";
 import {Outcome1155} from "./Outcome1155.sol";
@@ -29,6 +30,9 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
     /// @notice Emitted when accumulated fees are withdrawn.
     event FeeWithdrawn(address indexed receiver, uint256 amount);
 
+    /// @notice Emitted when fees are swept to Treasury.
+    event FeeSwept(uint256 indexed marketId, uint256 amount, address indexed treasury);
+
     /// @notice Emitted when the trading fee is updated.
     event FeeUpdated(uint256 previousFee, uint256 newFee);
 
@@ -37,6 +41,12 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
 
     /// @notice Emitted when market is resolved.
     event Resolved(uint8 indexed winningOutcome, bool invalid);
+
+    /// @notice Emitted when resolution is requested from oracle.
+    event ResolutionRequested(uint256 indexed marketId, uint64 timestamp);
+
+    /// @notice Emitted when market is finalized by oracle.
+    event MarketFinalized(uint256 indexed marketId, uint8 winningOutcome, bool invalid);
 
     /// @notice Emitted when a user redeems shares.
     event Redeemed(address indexed user, uint8 indexed outcome, uint256 shares, uint256 payout);
@@ -59,11 +69,13 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
     error LMSR_InsufficientCollateral(uint256 available, uint256 required);
     error LMSR_ExponentialInputTooLarge();
     error LMSR_InvalidAddress();
+    error LMSR_InsufficientFees();
     error LMSR_TradingPaused();
     error LMSR_InvariantCostDecrease();
     error LMSR_InvariantCostIncrease();
     error LMSR_InsufficientMarketShares(uint256 available, uint256 requested);
     error LMSR_TradingEnded();
+    error LMSR_TradingNotEndedYet();
     error LMSR_WrongState();
     error LMSR_OnlyOracle();
     error LMSR_NotWinner();
@@ -78,6 +90,9 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
 
     /// @notice ERC-20 token used for collateral.
     IERC20 public immutable collateral;
+
+    /// @notice Decimals of the collateral token (for normalization to UD60x18).
+    uint8 public immutable collateralDecimals;
 
     /// @notice Outcome1155 used for share accounting.
     Outcome1155 public immutable outcomeToken;
@@ -96,6 +111,9 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
 
     /// @notice Oracle contract address for resolution.
     address public immutable oracle;
+
+    /// @notice Treasury contract address for fee collection.
+    address public immutable treasury;
 
     /// @notice Total trading volume (for analytics).
     uint256 public totalVolume;
@@ -135,7 +153,8 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         address collateral_,
         address outcomeToken_,
         uint64 tradingEndsAt_,
-        address oracle_
+        address oracle_,
+        address treasury_
     ) {
         if (outcomeCount_ < MIN_OUTCOMES || outcomeCount_ > MAX_OUTCOMES) {
             revert LMSR_InvalidOutcomeCount(outcomeCount_);
@@ -143,7 +162,7 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         if (liquidityBRaw == 0) {
             revert LMSR_LiquidityParameterZero();
         }
-        if (collateral_ == address(0) || outcomeToken_ == address(0) || oracle_ == address(0)) {
+        if (collateral_ == address(0) || outcomeToken_ == address(0) || oracle_ == address(0) || treasury_ == address(0)) {
             revert LMSR_InvalidAddress();
         }
         if (feeRaw > MAX_FEE_RAW) {
@@ -154,6 +173,7 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         _grantRole(TREASURY_ROLE, msg.sender);
 
         collateral = IERC20(collateral_);
+        collateralDecimals = IERC20Metadata(collateral_).decimals();
         outcomeToken = Outcome1155(outcomeToken_);
         marketId = marketId_;
         outcomeCount = outcomeCount_;
@@ -161,6 +181,7 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         tradeFee = ud(feeRaw);
         tradingEndsAt = tradingEndsAt_;
         oracle = oracle_;
+        treasury = treasury_;
         state = MarketState.Trading;
 
         shares = new UD60x18[](outcomeCount_);
@@ -207,6 +228,28 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         emit FeeWithdrawn(receiver, amount);
     }
 
+    /// @notice Sweep collected fees to Treasury for distribution
+    /// @param amount Amount of fees to sweep (0 = sweep all)
+    function sweepFeesToTreasury(uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (amount == 0) {
+            amount = feeReserve; // Sweep all if amount is 0
+        }
+
+        if (amount > feeReserve) {
+            revert LMSR_InsufficientFees();
+        }
+
+        feeReserve -= amount;
+
+        // Approve Treasury to collect fees
+        collateral.approve(treasury, amount);
+
+        // Trigger Treasury collection (handles protocol/creator/oracle split)
+        ITreasury(treasury).collect(marketId, address(collateral), amount);
+
+        emit FeeSwept(marketId, amount, treasury);
+    }
+
     function getPrice(uint8 outcomeId) external view validOutcome(outcomeId) returns (uint256) {
         UD60x18[] memory snapshot = _snapshotShares();
         UD60x18 denominator = _sumExp(snapshot);
@@ -226,17 +269,25 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         return _availableCollateral();
     }
 
+    /// @notice Get total trading volume (Oracle-compatible getter)
+    /// @return Total volume in collateral token units
+    function getTotalVolume() external view returns (uint256) {
+        return totalVolume;
+    }
+
     function previewBuy(uint8 outcomeId, uint256 deltaSharesRaw)
         external
         view
         validOutcome(outcomeId)
         returns (uint256 costRaw, uint256 feeRaw, uint256 totalRaw)
     {
-        UD60x18 deltaShares = _validateDelta(deltaSharesRaw);
+        // Share quantities are dimensionless (always UD60x18)
+        UD60x18 deltaShares = UD60x18.wrap(deltaSharesRaw);
         (UD60x18 tradeCost, UD60x18 feeAmount, UD60x18 totalCost) = _quoteBuy(outcomeId, deltaShares);
-        costRaw = tradeCost.unwrap();
-        feeRaw = feeAmount.unwrap();
-        totalRaw = totalCost.unwrap();
+        // Denormalize cost outputs from UD60x18 to collateral decimals
+        costRaw = _fromUD60x18(tradeCost);
+        feeRaw = _fromUD60x18(feeAmount);
+        totalRaw = _fromUD60x18(totalCost);
     }
 
     function previewSell(uint8 outcomeId, uint256 deltaSharesRaw)
@@ -245,11 +296,13 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         validOutcome(outcomeId)
         returns (uint256 grossRaw, uint256 feeRaw, uint256 netRaw)
     {
-        UD60x18 deltaShares = _validateDelta(deltaSharesRaw);
+        // Share quantities are dimensionless (always UD60x18)
+        UD60x18 deltaShares = UD60x18.wrap(deltaSharesRaw);
         (UD60x18 gross, UD60x18 feeAmount, UD60x18 net) = _quoteSell(outcomeId, deltaShares);
-        grossRaw = gross.unwrap();
-        feeRaw = feeAmount.unwrap();
-        netRaw = net.unwrap();
+        // Denormalize payout outputs from UD60x18 to collateral decimals
+        grossRaw = _fromUD60x18(gross);
+        feeRaw = _fromUD60x18(feeAmount);
+        netRaw = _fromUD60x18(net);
     }
 
     function buy(uint8 outcomeId, uint256 deltaSharesRaw)
@@ -267,15 +320,20 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         if (tradingPaused) {
             revert LMSR_TradingPaused();
         }
-        UD60x18 deltaShares = _validateDelta(deltaSharesRaw);
+        // Share quantities are dimensionless (always UD60x18)
+        UD60x18 deltaShares = UD60x18.wrap(deltaSharesRaw);
+        if (deltaShares.unwrap() == 0) {
+            revert LMSR_InvalidAmount();
+        }
         (UD60x18 tradeCost, UD60x18 feeAmount, UD60x18 totalCost) = _quoteBuy(outcomeId, deltaShares);
         if (tradeCost.isZero()) {
             revert LMSR_TradeCostZero();
         }
 
-        uint256 costRaw = tradeCost.unwrap();
-        uint256 feeRaw = feeAmount.unwrap();
-        totalPaid = totalCost.unwrap();
+        // Denormalize costs from UD60x18 to collateral decimals for transfers
+        uint256 costRaw = _fromUD60x18(tradeCost);
+        uint256 feeRaw = _fromUD60x18(feeAmount);
+        totalPaid = _fromUD60x18(totalCost);
 
         collateral.safeTransferFrom(msg.sender, address(this), totalPaid);
         feeReserve += feeRaw;
@@ -302,7 +360,11 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         if (tradingPaused) {
             revert LMSR_TradingPaused();
         }
-        UD60x18 deltaShares = _validateDelta(deltaSharesRaw);
+        // Share quantities are dimensionless (always UD60x18)
+        UD60x18 deltaShares = UD60x18.wrap(deltaSharesRaw);
+        if (deltaShares.unwrap() == 0) {
+            revert LMSR_InvalidAmount();
+        }
         uint256 tokenId = outcomeToken.encodeTokenId(marketId, outcomeId);
         uint256 userBalance = outcomeToken.balanceOf(msg.sender, tokenId);
         if (userBalance < deltaSharesRaw) {
@@ -318,8 +380,9 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
             revert LMSR_NetPayoutZero();
         }
 
-        uint256 feeRaw = feeAmount.unwrap();
-        netPayout = net.unwrap();
+        // Denormalize payouts from UD60x18 to collateral decimals for transfers
+        uint256 feeRaw = _fromUD60x18(feeAmount);
+        netPayout = _fromUD60x18(net);
 
         uint256 available = _availableCollateral();
         if (available < netPayout) {
@@ -421,6 +484,36 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
     }
 
     // -------------------------------------------------------------------------
+    // Decimal Normalization Helpers
+    // -------------------------------------------------------------------------
+
+    /// @notice Normalize collateral amount to UD60x18 (18 decimals)
+    /// @dev Handles USDT (6 decimals) or any ERC20 token by scaling to 18 decimals
+    /// @param amount Amount in collateral token's native decimals
+    /// @return Normalized amount as UD60x18 (18 decimals)
+    function _toUD60x18(uint256 amount) internal view returns (UD60x18) {
+        if (collateralDecimals == 18) {
+            return UD60x18.wrap(amount);
+        }
+        // Scale up from collateralDecimals to 18 decimals
+        // For USDT (6 decimals): multiply by 10^12
+        return UD60x18.wrap(amount * 10 ** (18 - collateralDecimals));
+    }
+
+    /// @notice Denormalize UD60x18 (18 decimals) to collateral token's native decimals
+    /// @dev Handles USDT (6 decimals) or any ERC20 token by scaling down from 18 decimals
+    /// @param value Amount as UD60x18 (18 decimals)
+    /// @return Amount in collateral token's native decimals
+    function _fromUD60x18(UD60x18 value) internal view returns (uint256) {
+        if (collateralDecimals == 18) {
+            return value.unwrap();
+        }
+        // Scale down from 18 decimals to collateralDecimals
+        // For USDT (6 decimals): divide by 10^12
+        return value.unwrap() / 10 ** (18 - collateralDecimals);
+    }
+
+    // -------------------------------------------------------------------------
     // Resolution Functions
     // -------------------------------------------------------------------------
 
@@ -431,10 +524,12 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
             revert LMSR_WrongState();
         }
         if (block.timestamp < tradingEndsAt) {
-            revert LMSR_TradingEnded();
+            revert LMSR_TradingNotEndedYet();
         }
 
         state = MarketState.Resolving;
+
+        emit ResolutionRequested(marketId, uint64(block.timestamp));
 
         // Call oracle to request resolution
         IOracle(oracle).requestResolve(address(this));
@@ -469,6 +564,7 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         }
 
         emit Resolved(winning, invalid_);
+        emit MarketFinalized(marketId, winning, invalid_);
     }
 
     /// @notice Redeem shares for payout after market finalization
@@ -533,4 +629,8 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
 
 interface IOracle {
     function requestResolve(address market) external;
+}
+
+interface ITreasury {
+    function collect(uint256 marketId, address token, uint256 amount) external;
 }
