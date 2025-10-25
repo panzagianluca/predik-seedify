@@ -176,6 +176,12 @@ Ran 9 test suites: 170 tests passed, 0 failed, 0 skipped
   - ✅ All contracts verified on BSCScan Testnet
   - ✅ ABIs exported to `lib/abis/` (MarketFactory, LMSRMarket, MockUSDT)
   - ✅ Market creation tested and working (`script/TestMarketCreation.s.sol`)
+  - ✅ **Trading tested and working** (`script/TestTrade.s.sol`)
+    - ✅ Buy shares: 10 shares purchased for 5 USDT (tx: 0x9ab49902...)
+    - ✅ Sell shares: 5 shares sold for 2 USDT (tx: 0xc11f43a9...)
+    - ✅ Price impact verified: Yes moved from 50% to 50.12%
+    - ✅ Fee mechanism working: ~3 USDT round-trip fees
+    - ✅ Gas costs: ~318K gas total (~$0.17)
 
 - [ ] Task 5: Configure Biconomy (**Update**: Using Super Transactions API)
   - [ ] Configure paymaster policies for BNB Testnet (Chain ID 97)

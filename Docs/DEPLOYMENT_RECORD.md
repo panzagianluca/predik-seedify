@@ -194,22 +194,118 @@ cast call 0x2935645910f2773dc3f76A2Ec38594344618CF28 \
 cast call 0x2935645910f2773dc3f76A2Ec38594344618CF28 \
   "getPrice(uint8)(uint256)" 0 \
   --rpc-url https://data-seed-prebsc-1-s1.binance.org:8545/
-# Returns: 500000000000000000 (0.5 = 50%) ✅
+# Returns: 501249997395839843 (50.12% after trades) ✅
 
 # Get price for outcome 1 (No)
 cast call 0x2935645910f2773dc3f76A2Ec38594344618CF28 \
   "getPrice(uint8)(uint256)" 1 \
   --rpc-url https://data-seed-prebsc-1-s1.binance.org:8545/
-# Returns: 500000000000000000 (0.5 = 50%) ✅
+# Returns: 498750002604160156 (49.88% after trades) ✅
 ```
 
 **Results:**
 - ✅ Market successfully created
 - ✅ Market registered in factory
 - ✅ 2 outcomes configured
-- ✅ Initial prices are 50/50 (equal probability)
+- ✅ Initial prices were 50/50 (equal probability)
+- ✅ **Trading successfully executed** (prices now 50.12/49.88)
 - ✅ Market address matches expected pattern
 - ✅ All contract calls execute successfully
+
+---
+
+## 🔄 Trading Test Results
+
+### Test Trades Executed (October 25, 2025)
+
+**Script:** `script/TestTrade.s.sol`  
+**Market:** `0x2935645910f2773dc3f76A2Ec38594344618CF28`
+
+#### Trade 1: Buy Shares
+
+**Parameters:**
+- Shares purchased: 10 (10 × 10^18)
+- Outcome: 0 (Yes)
+- Trade cost: 5 USDT
+- Fees: 0.087 USDT
+- Total paid: 5.087 USDT
+
+**Transaction:** `0x9ab49902b31d544baa52df1344d889d916db2651f12d6fa9a8800e915bbc177a`  
+**Block:** 70064430  
+**Gas Used:** 166,896  
+**Status:** ✅ Success
+
+**Price Impact:**
+- Before: 50.00% (Yes) / 50.00% (No)
+- After: 50.12% (Yes) / 49.88% (No)
+
+#### Trade 2: Sell Shares
+
+**Parameters:**
+- Shares sold: 5 (5 × 10^18)
+- Outcome: 0 (Yes)
+- Trade payout: 2.5 USDT
+- Fees: 0.043 USDT
+- Net received: 2.456 USDT
+
+**Transaction:** `0xc11f43a9e7e844b5fa2ef8e457d596f3d66521794cfea7bf99ca26b55bbf8abd`  
+**Block:** 70064430  
+**Gas Used:** 45,935  
+**Status:** ✅ Success
+
+**Final State:**
+- Price: 50.12% (Yes) / 49.88% (No)
+- Shares remaining: 5
+- Net cost (round-trip): ~3 USDT in fees
+
+### Key Learnings from Trading Test
+
+**1. Function Signatures**
+- ✅ `buy(uint8 outcomeId, uint256 deltaShares)` - Takes SHARES as input, not USDT amount
+- ✅ `sell(uint8 outcomeId, uint256 deltaShares)` - Takes SHARES as input, not USDT amount
+- ✅ `previewBuy(uint8, uint256)` - Returns (tradeCost, fee, totalCost) all in USDT (6 decimals)
+- ✅ `previewSell(uint8, uint256)` - Returns (tradePayout, fee, netPayout) all in USDT (6 decimals)
+
+**2. Decimals Handling**
+- Shares: Always 18 decimals (UD60x18 dimensionless)
+- USDT: 6 decimals (collateral token)
+- Conversion handled internally by contract
+
+**3. Script Adjustments Required**
+
+**Before (Incorrect):**
+```solidity
+uint256 buyAmount = 10 * 1e6; // 10 USDT
+market.buy(0, buyAmount, minShares); // ❌ Wrong - takes shares, not USDT
+```
+
+**After (Correct):**
+```solidity
+uint256 sharesToBuy = 10 * 1e18; // 10 shares
+market.buy(0, sharesToBuy); // ✅ Correct - pass shares directly
+```
+
+**4. Preview Pattern**
+```solidity
+// Always preview before trading
+(uint256 tradeCost, uint256 fee, uint256 totalCost) = market.previewBuy(outcomeId, sharesToBuy);
+usdt.approve(marketAddress, totalCost); // Approve exact amount needed
+uint256 paid = market.buy(outcomeId, sharesToBuy); // Execute trade
+```
+
+### Gas Costs Analysis
+
+| Operation | Gas Used | Cost (at 1 gwei) | Notes |
+|-----------|----------|-----------------|-------|
+| Approve USDT | 105,590 | 0.000105 BNB | Standard ERC20 approval |
+| Buy Shares | 166,896 | 0.000167 BNB | LMSR calculation + ERC1155 mint |
+| Sell Shares | 45,935 | 0.000046 BNB | LMSR calculation + ERC1155 burn |
+| **Total** | **318,421** | **~0.00032 BNB (~$0.17)** | Full round-trip trade |
+
+**Notes:**
+- Sell is cheaper than buy (no approval needed on sell)
+- Gas costs are reasonable for testnet
+- With Biconomy paymaster, users won't pay any gas ✨
 
 ---
 

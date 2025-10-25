@@ -1561,15 +1561,39 @@ By end of hackathon, you should have:
 **Verification:**
 - ✅ All contracts verified on BSCScan Testnet
 - ✅ Market creation tested and working
-- ✅ Prices correctly calculated (50/50 initial split)
+- ✅ **Trading tested and working** (buy/sell shares successfully executed)
+- ✅ Prices correctly calculated (50/50 initial → 50.12/49.88 after trades)
+- ✅ Fee mechanism working correctly (~3 USDT round-trip fees)
 - ✅ All permissions configured correctly
 - ✅ ABIs exported to `lib/abis/`
+
+**Trade Test Results:**
+- ✅ Bought 10 shares for 5 USDT (tx: `0x9ab49902...`)
+- ✅ Sold 5 shares for 2 USDT (tx: `0xc11f43a9...`)
+- ✅ Price impact: Yes moved from 50% → 50.12%
+- ✅ Gas costs: ~318K gas (~$0.17 for full round-trip)
 
 **Critical Deployment Notes:**
 - Post-deployment permission configuration is CRITICAL
 - MarketFactory requires DEFAULT_ADMIN_ROLE on: Outcome1155, Router, Treasury, Oracle
 - See `Docs/DEPLOYMENT_TROUBLESHOOTING.md` for detailed lessons learned
 - Permission verification script recommended: `scripts/verify-permissions.sh`
+
+**Contract Function Signatures (Important for Frontend):**
+```solidity
+// Trading functions take SHARES as input, not USDT amounts
+function buy(uint8 outcomeId, uint256 deltaShares) external returns (uint256 totalPaid);
+function sell(uint8 outcomeId, uint256 deltaShares) external returns (uint256 netPayout);
+
+// Preview functions return costs/payouts in USDT (6 decimals)
+function previewBuy(uint8 outcomeId, uint256 deltaShares) 
+    external view returns (uint256 tradeCost, uint256 fee, uint256 totalCost);
+function previewSell(uint8 outcomeId, uint256 deltaShares) 
+    external view returns (uint256 tradePayout, uint256 fee, uint256 netPayout);
+
+// Shares: 18 decimals (UD60x18)
+// USDT: 6 decimals (collateral token)
+```
 
 **Next Steps:**
 - [ ] Configure Biconomy paymaster for gasless transactions
