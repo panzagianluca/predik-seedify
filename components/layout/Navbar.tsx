@@ -604,14 +604,8 @@ export function Navbar() {
                     >
                       {/* Wallet Address */}
                       <div className="px-2 py-2 text-sm font-satoshi text-muted-foreground flex items-center gap-2">
-                        <div className="relative w-3 h-3 p-1 rounded bg-[#FCFF52] flex items-center justify-center">
-                          <Image 
-                            src="/celo.png" 
-                            alt="Celo" 
-                            fill 
-                            sizes="12px" 
-                            className="object-contain p-[2px]" 
-                          />
+                        <div className="relative w-3 h-3 p-1 rounded bg-[#F3BA2F] flex items-center justify-center">
+                          <div className="text-[8px] font-bold text-black">BNB</div>
                         </div>
                         {address && `${address.slice(0, 6)}...${address.slice(-6)}`}
                       </div>

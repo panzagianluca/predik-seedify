@@ -3,9 +3,11 @@
 **Project Type:** Prediction Market Platform (Custom Smart Contracts)  
 **Original:** Predik (Myriad/Polkamarkets integration) - **MIGRATION COMPLETE** ✅  
 **Current:** Custom LMSR contracts on BNB Chain with Biconomy AA  
-**Last Updated:** October 24, 2025
+**Last Updated:** October 25, 2025
 
-> **🎉 CRITICAL UPDATE (Oct 24, 2025):** All 5 critical security vulnerabilities have been fixed and tested. See [Smart Contract Updates](#smart-contract-updates-oct-2025) for breaking changes.
+> **🎉 LATEST UPDATE (Oct 25, 2025):** MarketFactory v2 deployed with full on-chain metadata support! All markets now include description, category, and imageUrl fields indexed by The Graph.
+>
+> **🔐 SECURITY UPDATE (Oct 24, 2025):** All 5 critical security vulnerabilities have been fixed and tested. See [Smart Contract Updates](#smart-contract-updates-oct-2025) for breaking changes.
 >
 > **🚀 MIGRATION STATUS:** Successfully migrated from Myriad API + Polkamarkets SDK to custom smart contracts.
 
@@ -1359,7 +1361,7 @@ event WinningsClaimed(uint256 indexed marketId, address claimer, uint256 amount)
 
 ---
 
-## 🛠️ Environment Variables (UPDATED for AA + Gasless)
+## 🛠️ Environment Variables (UPDATED Oct 25, 2025)
 
 ```bash
 # Blockchain
@@ -1376,19 +1378,20 @@ NEXT_PUBLIC_ENTRYPOINT_ADDRESS=0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 # Stan
 NEXT_PUBLIC_PRIVY_APP_ID=                       # From Privy dashboard
 PRIVY_APP_SECRET=                               # Backend only (for API)
 
-# Custom Smart Contracts (BNB Testnet)
-NEXT_PUBLIC_ROUTER_ADDRESS=                     # Router (batched ops)
-NEXT_PUBLIC_LMSR_MARKET_ADDRESS=                # LMSR Market
-NEXT_PUBLIC_OUTCOME_1155_ADDRESS=               # ERC-1155 shares
-NEXT_PUBLIC_ORACLE_ADDRESS=                     # Oracle resolver
-NEXT_PUBLIC_TREASURY_ADDRESS=                   # Fee collection
-NEXT_PUBLIC_MOCK_USDT_ADDRESS=                  # MockUSDT (testnet)
+# Custom Smart Contracts (BNB Testnet - Oct 25, 2025)
+NEXT_PUBLIC_MARKET_FACTORY_ADDRESS=0xB8ddC4A144A16eF648d606Bc8041D67a4aDBe04f  # ⚡ WITH METADATA
+NEXT_PUBLIC_ROUTER_ADDRESS=0x756039D9b6E99d4EF0538A04B4c9E13D61f5d991
+NEXT_PUBLIC_OUTCOME1155_ADDRESS=0x6fd2258e61bB5eedF5606edA7F70Be06C5374f29
+NEXT_PUBLIC_ORACLE_ADDRESS=0x3b1d38fc5357079150eD50bD5a3d95ebdB08BBF4
+NEXT_PUBLIC_TREASURY_ADDRESS=0xF4F2bfa1d465fc88F7a987F4B7D3F4ED351f83a1
+NEXT_PUBLIC_MOCK_USDT_ADDRESS=0x4410355e143112e0619f822fC9Ecf92AaBd01b63
+NEXT_PUBLIC_DELPHAI_ORACLE_ADDRESS=0xA95E99848a318e37F128aB841b0CF693c1f0b4D1
 
 # Database (Neon Postgres — Drizzle)
 NEON_DATABASE_URL=postgresql://<neon-connection-string> # Neon connection string (use Neon dashboard secret)
 
-# Indexer (The Graph)
-NEXT_PUBLIC_SUBGRAPH_URL=                       # Hosted service URL
+# Indexer (The Graph - v1.3 with metadata)
+NEXT_PUBLIC_SUBGRAPH_URL=https://api.studio.thegraph.com/query/1704705/predik-seedify/1.3
 
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -2981,11 +2984,44 @@ describe("Trading Flow", () => {
 
 ## Deployed Contracts (BNB Testnet)
 
-- MarketFactory: 0x... (verified)
-- BondingCurveTrade: 0x... (verified)
-- DelphAIResolver: 0x... (verified)
-- PortfolioManager: 0x... (verified)
-- GaslessForwarder: 0x... (verified)
+**Network:** BNB Smart Chain Testnet (Chapel)  
+**Chain ID:** 97  
+**Deployer:** `0x5e310BA9A20FFf37a8E8962789B7B459f511E7d2`  
+**Last Updated:** October 25, 2025
+
+### Core Contracts
+
+| Contract | Address | Status | Explorer |
+|----------|---------|--------|----------|
+| **MockUSDT** | `0x4410355e143112e0619f822fC9Ecf92AaBd01b63` | ✅ Verified | [BSCScan](https://testnet.bscscan.com/address/0x4410355e143112e0619f822fC9Ecf92AaBd01b63) |
+| **Outcome1155** | `0x6fd2258e61bB5eedF5606edA7F70Be06C5374f29` | ✅ Verified | [BSCScan](https://testnet.bscscan.com/address/0x6fd2258e61bB5eedF5606edA7F70Be06C5374f29) |
+| **Router** | `0x756039D9b6E99d4EF0538A04B4c9E13D61f5d991` | ✅ Verified | [BSCScan](https://testnet.bscscan.com/address/0x756039D9b6E99d4EF0538A04B4c9E13D61f5d991) |
+| **Treasury** | `0xF4F2bfa1d465fc88F7a987F4B7D3F4ED351f83a1` | ✅ Verified | [BSCScan](https://testnet.bscscan.com/address/0xF4F2bfa1d465fc88F7a987F4B7D3F4ED351f83a1) |
+| **Oracle** | `0x3b1d38fc5357079150eD50bD5a3d95ebdB08BBF4` | ✅ Verified | [BSCScan](https://testnet.bscscan.com/address/0x3b1d38fc5357079150eD50bD5a3d95ebdB08BBF4) |
+| **MarketFactory** | `0xB8ddC4A144A16eF648d606Bc8041D67a4aDBe04f` | ✅ Verified ⚡ **WITH METADATA** | [BSCScan](https://testnet.bscscan.com/address/0xB8ddC4A144A16eF648d606Bc8041D67a4aDBe04f) |
+
+### The Graph Subgraph
+
+| Service | Endpoint | Version | Status |
+|---------|----------|---------|--------|
+| **The Graph Studio** | `https://api.studio.thegraph.com/query/1704705/predik-seedify/1.3` | v1.3 | ✅ Indexing |
+| **Dashboard** | `https://thegraph.com/studio/subgraph/predik-seedify` | - | ✅ Live |
+| **Start Block** | `70107780` | - | Oct 25, 2025 |
+
+### External Dependencies
+
+| Service | Address | Notes |
+|---------|---------|-------|
+| **DelphAI Oracle** | `0xA95E99848a318e37F128aB841b0CF693c1f0b4D1` | Pre-deployed oracle service |
+
+### Latest Contract Features
+
+**MarketFactory v2 (Oct 25, 2025):**
+- ✅ Full on-chain metadata support (description, category, imageUrl)
+- ✅ CreateMarketParams struct (solves stack-too-deep)
+- ✅ Updated MarketCreated event with metadata fields
+- ✅ The Graph indexing all metadata
+- ✅ All 170 tests passing
 
 ## ABIs
 

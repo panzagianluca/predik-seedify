@@ -1,0 +1,17 @@
+{
+  "name": "predik-subgraph",
+  "version": "1.0.0",
+  "description": "The Graph subgraph for Predik prediction markets on BNB Testnet",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --studio predik-seedify",
+    "create-local": "graph create --node http://localhost:8020/ predik-seedify",
+    "remove-local": "graph remove --node http://localhost:8020/ predik-seedify",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 predik-seedify"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.56.0",
+    "@graphprotocol/graph-ts": "^0.31.0"
+  }
+}

@@ -65,25 +65,17 @@ contract TestMarketCreation is Script {
         console.log("Trading ends:", tradingEndsAt);
         console.log("");
         
-                // Create market
-        console.log("Creating market...");
-        
-        MarketFactory.CreateMarketParams memory params = MarketFactory.CreateMarketParams({
-            title: "Test Market",
-            description: "Will Bitcoin reach $100k by end of 2024?",
-            category: "Crypto",
-            imageUrl: "",
-            outcomes: outcomes,
-            tradingEndsAt: tradingEndsAt,
-            liquidityParameter: 0,
-            protocolFeeBps: 0,
-            creatorFeeBps: 0,
-            oracleFeeBps: 0,
-            initialLiquidity: initialLiquidity,
-            delphAIMarketId: delphAIMarketId
-        });
-        
-        (uint256 marketId, address marketAddress) = factory.createMarket(params);
+        (uint256 marketId, address marketAddress) = factory.createMarket(
+            question,
+            outcomes,
+            tradingEndsAt,
+            liquidityParameter,   // 4th: LMSR b parameter
+            protocolFeeBps,       // 5th: protocol fee
+            creatorFeeBps,        // 6th: creator fee
+            oracleFeeBps,         // 7th: oracle fee
+            initialLiquidity,     // 8th: initial collateral amount
+            delphAIMarketId       // 9th: DelphAI market ID
+        );
         
         console.log("=== Market Created Successfully! ===");
         console.log("Market ID:", marketId);

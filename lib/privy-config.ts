@@ -4,23 +4,35 @@ import { bscTestnet } from 'viem/chains'
 export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''
 
 export const privyConfig: PrivyClientConfig = {
-  // Appearance
+  // Appearance - Spanish-first branding
   appearance: {
     theme: 'dark',
-    accentColor: '#A855F7', // Electric purple from your theme
+    accentColor: '#A855F7', // Electric purple from theme
     logo: '/logo.png',
+    landingHeader: 'Acceder a Predik',
+    loginMessage: 'Inicia sesión para comenzar a predecir',
+    walletChainType: 'ethereum-only',
   },
   
-  // Login methods
-  loginMethods: ['email', 'google', 'wallet'],
+  // Login methods - Google and Email primary (no complex wallet setup)
+  loginMethods: ['google', 'email', 'wallet'],
   
-  // Embedded wallets config - create wallet for users without one
+  // Embedded wallets config - always create for social login users
   embeddedWallets: {
-    createOnLogin: 'users-without-wallets',
-  } as any,
+    ethereum: {
+      createOnLogin: 'users-without-wallets',
+    },
+    showWalletUIs: true,
+  },
   
-  // Supported chains
+  // Supported chains - BNB Testnet only
   supportedChains: [bscTestnet],
   
   defaultChain: bscTestnet,
+  
+  // Legal compliance
+  legal: {
+    termsAndConditionsUrl: 'https://predik.io/terminos',
+    privacyPolicyUrl: 'https://predik.io/privacidad',
+  },
 }

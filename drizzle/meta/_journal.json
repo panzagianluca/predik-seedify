@@ -29,6 +29,13 @@
       "when": 1760796872187,
       "tag": "0003_yielding_brood",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1761421938046,
+      "tag": "0004_tricky_gorgon",
+      "breakpoints": true
     }
   ]
 }

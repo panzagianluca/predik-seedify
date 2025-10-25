@@ -20,6 +20,26 @@ contract MarketFactory is AccessControl {
     using SafeERC20 for IERC20;
 
     // -------------------------------------------------------------------------
+    // Structs
+    // -------------------------------------------------------------------------
+
+    /// @notice Parameters for creating a new market
+    struct CreateMarketParams {
+        string title;
+        string description;
+        string category;
+        string imageUrl;
+        string[] outcomes;
+        uint64 tradingEndsAt;
+        uint256 liquidityParameter;
+        uint16 protocolFeeBps;
+        uint16 creatorFeeBps;
+        uint16 oracleFeeBps;
+        uint256 initialLiquidity;
+        uint256 delphAIMarketId;
+    }
+
+    // -------------------------------------------------------------------------
     // Events
     // -------------------------------------------------------------------------
 
@@ -29,6 +49,9 @@ contract MarketFactory is AccessControl {
         address indexed marketAddress,
         address indexed creator,
         string title,
+        string description,
+        string category,
+        string imageUrl,
         string[] outcomes,
         uint64 tradingEndsAt,
         uint256 liquidityParameter
@@ -172,37 +195,23 @@ contract MarketFactory is AccessControl {
     // -------------------------------------------------------------------------
 
     /// @notice Create a new prediction market
-    /// @param title Market title
-    /// @param outcomes Array of outcome names
-    /// @param tradingEndsAt Timestamp when trading ends
-    /// @param liquidityParameter LMSR b parameter (0 = use default)
-    /// @param protocolFeeBps Protocol fee in bps (0 = use default)
-    /// @param creatorFeeBps Creator fee in bps (0 = use default)
-    /// @param oracleFeeBps Oracle fee in bps (0 = use default)
-    /// @param initialLiquidity Initial collateral to fund the market
-    /// @param delphAIMarketId DelphAI market ID (created externally via DelphAI.createMarket())
+    /// @param params Market creation parameters
     /// @return marketId The ID of the created market
     /// @return marketAddress The address of the created market
     /// @dev IMPORTANT: Before calling this function, you must:
-    ///      1. Call DelphAI.createMarket() to create the oracle market
-    ///      2. Pass the returned DelphAI market ID to this function
+    ///      1. Call DelphAI.createMarket() to create the oracle market with full metadata
+    ///      2. Pass the returned DelphAI market ID in params.delphAIMarketId
     ///      This ensures proper oracle resolution mapping.
-    function createMarket(
-        string calldata title,
-        string[] calldata outcomes,
-        uint64 tradingEndsAt,
-        uint256 liquidityParameter,
-        uint16 protocolFeeBps,
-        uint16 creatorFeeBps,
-        uint16 oracleFeeBps,
-        uint256 initialLiquidity,
-        uint256 delphAIMarketId
-    ) external onlyRole(MARKET_CREATOR_ROLE) returns (uint256 marketId, address marketAddress) {
+    function createMarket(CreateMarketParams calldata params)
+        external
+        onlyRole(MARKET_CREATOR_ROLE)
+        returns (uint256 marketId, address marketAddress)
+    {
         // Validation
-        if (outcomes.length < 2) {
+        if (params.outcomes.length < 2) {
             revert MarketFactory_InvalidOutcomeCount();
         }
-        if (tradingEndsAt <= block.timestamp) {
+        if (params.tradingEndsAt <= block.timestamp) {
             revert MarketFactory_TradingEndsInPast();
         }
         
@@ -210,15 +219,15 @@ contract MarketFactory is AccessControl {
         // Minimum: 100 tokens in collateral's native decimals (e.g., 100 USDT = 100 * 10^6)
         uint8 collateralDecimals = IERC20Metadata(collateral).decimals();
         uint256 minInitialLiquidity = 100 * (10 ** collateralDecimals);
-        if (initialLiquidity < minInitialLiquidity) {
+        if (params.initialLiquidity < minInitialLiquidity) {
             revert MarketFactory_InsufficientLiquidity();
         }
 
         // Use defaults if not specified
-        uint256 b = liquidityParameter == 0 ? defaultLiquidityParameter : liquidityParameter;
-        uint16 protocolBps = protocolFeeBps == 0 ? defaultProtocolFeeBps : protocolFeeBps;
-        uint16 creatorBps = creatorFeeBps == 0 ? defaultCreatorFeeBps : creatorFeeBps;
-        uint16 oracleBps = oracleFeeBps == 0 ? defaultOracleFeeBps : oracleFeeBps;
+        uint256 b = params.liquidityParameter == 0 ? defaultLiquidityParameter : params.liquidityParameter;
+        uint16 protocolBps = params.protocolFeeBps == 0 ? defaultProtocolFeeBps : params.protocolFeeBps;
+        uint16 creatorBps = params.creatorFeeBps == 0 ? defaultCreatorFeeBps : params.creatorFeeBps;
+        uint16 oracleBps = params.oracleFeeBps == 0 ? defaultOracleFeeBps : params.oracleFeeBps;
 
         // Validate liquidity parameter meets minimum threshold
         if (b < MIN_LIQUIDITY_PARAMETER) {
@@ -239,12 +248,12 @@ contract MarketFactory is AccessControl {
         marketAddress = address(
             new LMSRMarket(
                 marketId,
-                uint8(outcomes.length),
+                uint8(params.outcomes.length),
                 b,
                 totalFeeRaw,
                 collateral,
                 outcome1155,
-                tradingEndsAt,
+                params.tradingEndsAt,
                 oracle,
                 treasury  // ✅ Pass treasury address
             )
@@ -261,20 +270,20 @@ contract MarketFactory is AccessControl {
 
         // ✅ CRITICAL FIX: Register with Oracle using DelphAI market ID (not our internal ID)
         // The delphAIMarketId parameter must be obtained by calling DelphAI.createMarket() first
-        Oracle(oracle).registerMarket(marketAddress, delphAIMarketId);
+        Oracle(oracle).registerMarket(marketAddress, params.delphAIMarketId);
 
         // Store mapping
         marketById[marketId] = marketAddress;
         marketIdByAddress[marketAddress] = marketId;
-        delphAIMarketIdByMarketId[marketId] = delphAIMarketId;
+        delphAIMarketIdByMarketId[marketId] = params.delphAIMarketId;
         allMarkets.push(marketAddress);
 
         // Transfer initial liquidity from creator and fund market
-        IERC20(collateral).safeTransferFrom(msg.sender, address(this), initialLiquidity);
-        IERC20(collateral).approve(marketAddress, initialLiquidity);
-        LMSRMarket(marketAddress).fundMarket(initialLiquidity);
+        IERC20(collateral).safeTransferFrom(msg.sender, address(this), params.initialLiquidity);
+        IERC20(collateral).approve(marketAddress, params.initialLiquidity);
+        LMSRMarket(marketAddress).fundMarket(params.initialLiquidity);
 
-        emit MarketCreated(marketId, marketAddress, msg.sender, title, outcomes, tradingEndsAt, b);
+        emit MarketCreated(marketId, marketAddress, msg.sender, params.title, params.description, params.category, params.imageUrl, params.outcomes, params.tradingEndsAt, b);
     }
 
     // -------------------------------------------------------------------------

@@ -31,36 +31,11 @@ contract MarketFactoryTest is Test {
 
     string[] public outcomes;
 
-    // Helper function to create market params struct
-    function _defaultParams(string memory title, uint64 tradingEndsAt, uint256 initialLiquidity, uint256 delphAIId) 
-        internal 
-        view 
-        returns (MarketFactory.CreateMarketParams memory) 
-    {
-        return MarketFactory.CreateMarketParams({
-            title: title,
-            description: "Test market description",
-            category: "Test",
-            imageUrl: "",
-            outcomes: outcomes,
-            tradingEndsAt: tradingEndsAt,
-            liquidityParameter: 0,
-            protocolFeeBps: 0,
-            creatorFeeBps: 0,
-            oracleFeeBps: 0,
-            initialLiquidity: initialLiquidity,
-            delphAIMarketId: delphAIId
-        });
-    }
-
     event MarketCreated(
         uint256 indexed marketId,
         address indexed marketAddress,
         address indexed creator,
         string title,
-        string description,
-        string category,
-        string imageUrl,
         string[] outcomes,
         uint64 tradingEndsAt,
         uint256 liquidityParameter
@@ -204,10 +179,14 @@ contract MarketFactoryTest is Test {
         vm.startPrank(creator);
         usdt.approve(address(factory), initialLiquidity);
 
-        MarketFactory.CreateMarketParams memory params = _defaultParams(
-            "Test Market", tradingEndsAt, initialLiquidity, 1
+        (uint256 marketId, address marketAddress) = factory.createMarket(
+            "Test Market", outcomes, tradingEndsAt, 0, // Use defaults
+            0, // Use defaults
+            0, // Use defaults
+            0, // Use default oracle fee
+            initialLiquidity,
+            1  // DelphAI market ID (mock)
         );
-        (uint256 marketId, address marketAddress) = factory.createMarket(params);
         vm.stopPrank();
 
         // Verify market created
@@ -238,21 +217,9 @@ contract MarketFactoryTest is Test {
         vm.startPrank(creator);
         usdt.approve(address(factory), initialLiquidity);
 
-        MarketFactory.CreateMarketParams memory params = MarketFactory.CreateMarketParams({
-            title: "Custom Market",
-            description: "Test market description",
-            category: "Test",
-            imageUrl: "",
-            outcomes: outcomes,
-            tradingEndsAt: tradingEndsAt,
-            liquidityParameter: customB,
-            protocolFeeBps: customProtocolFee,
-            creatorFeeBps: customCreatorFee,
-            oracleFeeBps: 0,
-            initialLiquidity: initialLiquidity,
-            delphAIMarketId: 2
-        });
-        (uint256 marketId, address marketAddress) = factory.createMarket(params);
+        (uint256 marketId, address marketAddress) = factory.createMarket(
+            "Custom Market", outcomes, tradingEndsAt, customB, customProtocolFee, customCreatorFee, 0, initialLiquidity, 2
+        );
         vm.stopPrank();
 
         // Verify custom parameters were used
@@ -274,11 +241,11 @@ contract MarketFactoryTest is Test {
 
         // Create 3 markets
         (uint256 id1, address addr1) =
-            factory.createMarket(_defaultParams("Market 1", tradingEndsAt, initialLiquidity, 10));
+            factory.createMarket("Market 1", outcomes, tradingEndsAt, 0, 0, 0, 0, initialLiquidity, 10);
         (uint256 id2, address addr2) =
-            factory.createMarket(_defaultParams("Market 2", tradingEndsAt, initialLiquidity, 11));
+            factory.createMarket("Market 2", outcomes, tradingEndsAt, 0, 0, 0, 0, initialLiquidity, 11);
         (uint256 id3, address addr3) =
-            factory.createMarket(_defaultParams("Market 3", tradingEndsAt, initialLiquidity, 12));
+            factory.createMarket("Market 3", outcomes, tradingEndsAt, 0, 0, 0, 0, initialLiquidity, 12);
         vm.stopPrank();
 
         // Verify IDs are sequential
@@ -298,7 +265,7 @@ contract MarketFactoryTest is Test {
     function test_CreateMarket_RevertIf_Unauthorized() public {
         vm.prank(user);
         vm.expectRevert();
-        factory.createMarket(_defaultParams("Test", uint64(block.timestamp + 1 days), 1000e6, 20));
+        factory.createMarket("Test", outcomes, uint64(block.timestamp + 1 days), 0, 0, 0, 0, 1000e6, 20);
     }
 
     function test_CreateMarket_RevertIf_TooFewOutcomes() public {
@@ -307,21 +274,19 @@ contract MarketFactoryTest is Test {
 
         vm.prank(admin);
         vm.expectRevert(MarketFactory.MarketFactory_InvalidOutcomeCount.selector);
-        MarketFactory.CreateMarketParams memory params = _defaultParams("Test", uint64(block.timestamp + 1 days), 1000e6, 21);
-        params.outcomes = singleOutcome;
-        factory.createMarket(params);
+        factory.createMarket("Test", singleOutcome, uint64(block.timestamp + 1 days), 0, 0, 0, 0, 1000e6, 21);
     }
 
     function test_CreateMarket_RevertIf_TradingEndsInPast() public {
         vm.prank(admin);
         vm.expectRevert(MarketFactory.MarketFactory_TradingEndsInPast.selector);
-        factory.createMarket(_defaultParams("Test", uint64(block.timestamp - 1), 1000e6, 22));
+        factory.createMarket("Test", outcomes, uint64(block.timestamp - 1), 0, 0, 0, 0, 1000e6, 22);
     }
 
     function test_CreateMarket_RevertIf_ZeroLiquidity() public {
         vm.prank(admin);
-        vm.expectRevert();
-        factory.createMarket(_defaultParams("Test", uint64(block.timestamp + 1 days), 0, 23));
+        vm.expectRevert(MarketFactory.MarketFactory_InsufficientLiquidity.selector);
+        factory.createMarket("Test", outcomes, uint64(block.timestamp + 1 days), 0, 0, 0, 0, 0, 23);
     }
 
     function test_CreateMarket_RevertIf_InvalidCustomFees() public {
@@ -329,21 +294,8 @@ contract MarketFactoryTest is Test {
         usdt.approve(address(factory), 10000e6);
 
         vm.expectRevert(MarketFactory.MarketFactory_InvalidFee.selector);
-        MarketFactory.CreateMarketParams memory params = MarketFactory.CreateMarketParams({
-            title: "Test",
-            description: "Test market description",
-            category: "Test",
-            imageUrl: "",
-            outcomes: outcomes,
-            tradingEndsAt: uint64(block.timestamp + 1 days),
-            liquidityParameter: 0,
-            protocolFeeBps: 6000,
-            creatorFeeBps: 4000,
-            oracleFeeBps: 1000,
-            initialLiquidity: 10000e6,
-            delphAIMarketId: 24
-        });
-        factory.createMarket(params);
+        factory.createMarket("Test", outcomes, uint64(block.timestamp + 1 days), 0, 6000, 4000, 1000, // Sum > 10000
+            10000e6, 24);
         vm.stopPrank();
     }
 
@@ -355,7 +307,7 @@ contract MarketFactoryTest is Test {
         vm.startPrank(creator);
         usdt.approve(address(factory), 10000e6);
         (uint256 marketId, address marketAddress) =
-            factory.createMarket(_defaultParams("Test", uint64(block.timestamp + 1 days), 10000e6, 30));
+            factory.createMarket("Test", outcomes, uint64(block.timestamp + 1 days), 0, 0, 0, 0, 10000e6, 30);
         vm.stopPrank();
 
         assertEq(factory.getMarket(marketId), marketAddress);
@@ -370,7 +322,7 @@ contract MarketFactoryTest is Test {
         vm.startPrank(creator);
         usdt.approve(address(factory), 10000e6);
         (uint256 marketId, address marketAddress) =
-            factory.createMarket(_defaultParams("Test", uint64(block.timestamp + 1 days), 10000e6, 31));
+            factory.createMarket("Test", outcomes, uint64(block.timestamp + 1 days), 0, 0, 0, 0, 10000e6, 31);
         vm.stopPrank();
 
         assertEq(factory.getMarketId(marketAddress), marketId);
@@ -388,7 +340,7 @@ contract MarketFactoryTest is Test {
         address[] memory created = new address[](3);
         for (uint256 i = 0; i < 3; i++) {
             (, address addr) =
-                factory.createMarket(_defaultParams("Test", uint64(block.timestamp + 1 days), 10000e6, 40 + i));
+                factory.createMarket("Test", outcomes, uint64(block.timestamp + 1 days), 0, 0, 0, 0, 10000e6, 40 + i);
             created[i] = addr;
         }
         vm.stopPrank();
@@ -405,7 +357,7 @@ contract MarketFactoryTest is Test {
         usdt.approve(address(factory), 50000e6);
 
         for (uint256 i = 0; i < 5; i++) {
-            factory.createMarket(_defaultParams("Test", uint64(block.timestamp + 1 days), 10000e6, 50 + i));
+            factory.createMarket("Test", outcomes, uint64(block.timestamp + 1 days), 0, 0, 0, 0, 10000e6, 50 + i);
         }
         vm.stopPrank();
 
@@ -514,7 +466,7 @@ contract MarketFactoryTest is Test {
         vm.startPrank(creator);
         usdt.approve(address(factory), initialLiquidity);
         (, address marketAddress) =
-            factory.createMarket(_defaultParams("Test Market", tradingEndsAt, initialLiquidity, 100));
+            factory.createMarket("Test Market", outcomes, tradingEndsAt, 0, 0, 0, 0, initialLiquidity, 100);
         vm.stopPrank();
 
         // Grant roles for trading
