@@ -126,3 +126,6 @@ Git
 If the user tells you to stage and commit, you may do so.
 
 You are NEVER allowed to stage and commit files automatically.
+
+
+BEFORE RUNNING ANY FUCKING COMMAND YOU WILL EXPLAIN WHY ARE YOU DOING IT AND WHAT YOU EXPECT TO ACHIEVE.

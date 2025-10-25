@@ -4,7 +4,7 @@
 export class Application {
   constructor(config: any) {}
   getERC20Contract(config: any) {
-    return { getTokenAmount: async () => 0 }
+    return { getTokenAmount: async (address?: any) => 0 }
   }
   getPredictionMarketV3PlusContract(config: any) {
     return {
