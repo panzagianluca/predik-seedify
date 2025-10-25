@@ -56,11 +56,7 @@ contract LMSRMarketResolutionTest is Test {
     }
 
     function _mockOracleCall() internal {
-        vm.mockCall(
-            mockOracle,
-            abi.encodeWithSignature("requestResolve(address)", address(market)),
-            abi.encode()
-        );
+        vm.mockCall(mockOracle, abi.encodeWithSignature("requestResolve(address)", address(market)), abi.encode());
     }
 
     function _buyShares(address trader, uint8 outcomeId, uint256 amount) internal {
@@ -139,7 +135,7 @@ contract LMSRMarketResolutionTest is Test {
         // Fast forward and request resolution
         vm.warp(block.timestamp + 8 days);
         _mockOracleCall();
-        
+
         market.requestResolve();
 
         uint256 amount = 1e18;
@@ -320,7 +316,7 @@ contract LMSRMarketResolutionTest is Test {
     function testRedeemInvalidMarketProRata() public {
         // Multiple traders buy different outcomes
         _buyShares(trader1, 0, 10e18); // 10 shares outcome 0
-        _buyShares(trader2, 1, 5e18);  // 5 shares outcome 1
+        _buyShares(trader2, 1, 5e18); // 5 shares outcome 1
 
         uint256 trader1Balance = usdt.balanceOf(trader1);
         uint256 trader2Balance = usdt.balanceOf(trader2);

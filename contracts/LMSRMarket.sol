@@ -53,9 +53,10 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
 
     /// @notice Market lifecycle states.
     enum MarketState {
-        Trading,    // Active trading period
-        Resolving,  // Resolution requested, waiting for oracle
-        Finalized   // Outcome determined, redemption available
+        Trading, // Active trading period
+        Resolving, // Resolution requested, waiting for oracle
+        Finalized // Outcome determined, redemption available
+
     }
 
     error LMSR_InvalidOutcome(uint8 outcomeId);
@@ -162,7 +163,9 @@ contract LMSRMarket is AccessControl, ReentrancyGuard {
         if (liquidityBRaw == 0) {
             revert LMSR_LiquidityParameterZero();
         }
-        if (collateral_ == address(0) || outcomeToken_ == address(0) || oracle_ == address(0) || treasury_ == address(0)) {
+        if (
+            collateral_ == address(0) || outcomeToken_ == address(0) || oracle_ == address(0) || treasury_ == address(0)
+        ) {
             revert LMSR_InvalidAddress();
         }
         if (feeRaw > MAX_FEE_RAW) {

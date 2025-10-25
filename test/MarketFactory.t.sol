@@ -32,10 +32,10 @@ contract MarketFactoryTest is Test {
     string[] public outcomes;
 
     // Helper function to create market params struct
-    function _defaultParams(string memory title, uint64 tradingEndsAt, uint256 initialLiquidity, uint256 delphAIId) 
-        internal 
-        view 
-        returns (MarketFactory.CreateMarketParams memory) 
+    function _defaultParams(string memory title, uint64 tradingEndsAt, uint256 initialLiquidity, uint256 delphAIId)
+        internal
+        view
+        returns (MarketFactory.CreateMarketParams memory)
     {
         return MarketFactory.CreateMarketParams({
             title: title,
@@ -75,19 +75,19 @@ contract MarketFactoryTest is Test {
         // Deploy core contracts
         usdt = new MockUSDT();
         outcome1155 = new Outcome1155("https://api.predik.io/outcomes/", address(1)); // Dummy router for now
-        
+
         // Deploy router
         router = new Router(address(outcome1155));
-        
+
         // Update outcome1155 to use real router
         outcome1155.setRouter(address(router));
-        
+
         // Deploy oracle first (Treasury needs it)
         oracle = new Oracle(address(usdt), address(1), delphAI, ORACLE_FEE); // Temp treasury address
-        
+
         // Deploy treasury with correct oracle
         treasury = new Treasury(6000, 3000, 1000, address(oracle)); // 60/30/10 split
-        
+
         // Update oracle's treasury address
         oracle.setTreasury(address(treasury));
 
@@ -110,7 +110,7 @@ contract MarketFactoryTest is Test {
         outcome1155.grantRole(outcome1155.DEFAULT_ADMIN_ROLE(), address(factory));
         outcome1155.grantRole(outcome1155.MINTER_BURNER_ROLE(), address(factory));
         router.grantRole(router.DEFAULT_ADMIN_ROLE(), address(factory));
-        
+
         // Grant creator role to creator address
         factory.grantRole(factory.MARKET_CREATOR_ROLE(), creator);
 
@@ -160,9 +160,7 @@ contract MarketFactoryTest is Test {
     function test_Constructor_RevertIf_ZeroLiquidityParameter() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                MarketFactory.MarketFactory_LiquidityTooLow.selector,
-                0,
-                factory.MIN_LIQUIDITY_PARAMETER()
+                MarketFactory.MarketFactory_LiquidityTooLow.selector, 0, factory.MIN_LIQUIDITY_PARAMETER()
             )
         );
         new MarketFactory(
@@ -189,7 +187,7 @@ contract MarketFactoryTest is Test {
             DEFAULT_B,
             5000,
             5000, // Protocol + Creator = 10000
-            1000  // Adding oracle makes sum > 10000
+            1000 // Adding oracle makes sum > 10000
         );
     }
 
@@ -204,9 +202,8 @@ contract MarketFactoryTest is Test {
         vm.startPrank(creator);
         usdt.approve(address(factory), initialLiquidity);
 
-        MarketFactory.CreateMarketParams memory params = _defaultParams(
-            "Test Market", tradingEndsAt, initialLiquidity, 1
-        );
+        MarketFactory.CreateMarketParams memory params =
+            _defaultParams("Test Market", tradingEndsAt, initialLiquidity, 1);
         (uint256 marketId, address marketAddress) = factory.createMarket(params);
         vm.stopPrank();
 
@@ -261,7 +258,8 @@ contract MarketFactoryTest is Test {
         assertEq(market.liquidityB().unwrap(), customB);
         // tradeFee combines protocol + creator + oracle fees
         // Note: passing 0 for oracle fee uses default (DEFAULT_ORACLE_FEE = 50 bps)
-        uint256 expectedFee = ((uint256(customProtocolFee) + uint256(customCreatorFee) + uint256(DEFAULT_ORACLE_FEE)) * 1e18) / 10000;
+        uint256 expectedFee =
+            ((uint256(customProtocolFee) + uint256(customCreatorFee) + uint256(DEFAULT_ORACLE_FEE)) * 1e18) / 10000;
         assertEq(market.tradeFee().unwrap(), expectedFee);
     }
 
@@ -307,7 +305,8 @@ contract MarketFactoryTest is Test {
 
         vm.prank(admin);
         vm.expectRevert(MarketFactory.MarketFactory_InvalidOutcomeCount.selector);
-        MarketFactory.CreateMarketParams memory params = _defaultParams("Test", uint64(block.timestamp + 1 days), 1000e6, 21);
+        MarketFactory.CreateMarketParams memory params =
+            _defaultParams("Test", uint64(block.timestamp + 1 days), 1000e6, 21);
         params.outcomes = singleOutcome;
         factory.createMarket(params);
     }
@@ -445,9 +444,7 @@ contract MarketFactoryTest is Test {
         vm.startPrank(admin);
         vm.expectRevert(
             abi.encodeWithSelector(
-                MarketFactory.MarketFactory_LiquidityTooLow.selector,
-                0,
-                factory.MIN_LIQUIDITY_PARAMETER()
+                MarketFactory.MarketFactory_LiquidityTooLow.selector, 0, factory.MIN_LIQUIDITY_PARAMETER()
             )
         );
         factory.setDefaultLiquidityParameter(0);

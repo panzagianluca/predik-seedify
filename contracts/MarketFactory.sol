@@ -214,7 +214,7 @@ contract MarketFactory is AccessControl {
         if (params.tradingEndsAt <= block.timestamp) {
             revert MarketFactory_TradingEndsInPast();
         }
-        
+
         // Validate initial liquidity based on collateral decimals
         // Minimum: 100 tokens in collateral's native decimals (e.g., 100 USDT = 100 * 10^6)
         uint8 collateralDecimals = IERC20Metadata(collateral).decimals();
@@ -255,7 +255,7 @@ contract MarketFactory is AccessControl {
                 outcome1155,
                 params.tradingEndsAt,
                 oracle,
-                treasury  // ✅ Pass treasury address
+                treasury // ✅ Pass treasury address
             )
         );
 
@@ -283,7 +283,18 @@ contract MarketFactory is AccessControl {
         IERC20(collateral).approve(marketAddress, params.initialLiquidity);
         LMSRMarket(marketAddress).fundMarket(params.initialLiquidity);
 
-        emit MarketCreated(marketId, marketAddress, msg.sender, params.title, params.description, params.category, params.imageUrl, params.outcomes, params.tradingEndsAt, b);
+        emit MarketCreated(
+            marketId,
+            marketAddress,
+            msg.sender,
+            params.title,
+            params.description,
+            params.category,
+            params.imageUrl,
+            params.outcomes,
+            params.tradingEndsAt,
+            b
+        );
     }
 
     // -------------------------------------------------------------------------

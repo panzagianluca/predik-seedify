@@ -216,7 +216,7 @@ contract Oracle is AccessControl, ReentrancyGuard {
 
         // Calculate required dispute bond from market
         uint256 requiredBond = _calculateDisputeBond(market);
-        
+
         // Transfer USDT bond from disputer
         collateral.safeTransferFrom(msg.sender, address(this), requiredBond);
 

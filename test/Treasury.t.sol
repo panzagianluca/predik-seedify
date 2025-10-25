@@ -38,9 +38,7 @@ contract TreasuryTest is Test {
 
     event ProtocolWithdrawal(address indexed token, address indexed to, uint256 amount);
 
-    event CreatorWithdrawal(
-        uint256 indexed marketId, address indexed creator, address indexed token, uint256 amount
-    );
+    event CreatorWithdrawal(uint256 indexed marketId, address indexed creator, address indexed token, uint256 amount);
 
     event OracleWithdrawal(address indexed oracle, address indexed token, uint256 amount);
 
@@ -176,8 +174,8 @@ contract TreasuryTest is Test {
         treasury.collect(MARKET_ID_1, address(usdt), feeAmount);
 
         // Verify total adds up correctly (remainder goes to protocol)
-        uint256 total = treasury.getProtocolBalance(address(usdt)) + treasury.getCreatorBalance(MARKET_ID_1, address(usdt))
-            + treasury.getOracleBalance(address(usdt));
+        uint256 total = treasury.getProtocolBalance(address(usdt))
+            + treasury.getCreatorBalance(MARKET_ID_1, address(usdt)) + treasury.getOracleBalance(address(usdt));
         assertEq(total, feeAmount);
     }
 

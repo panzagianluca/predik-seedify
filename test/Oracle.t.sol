@@ -445,7 +445,7 @@ contract OracleTest is Test {
         // Mint USDT for disputer but only approve insufficient amount
         vm.prank(admin);
         collateral.mint(user2, requiredBond);
-        
+
         vm.startPrank(user2);
         collateral.approve(address(oracle), requiredBond - 1);
         vm.expectRevert(); // SafeERC20 will revert on insufficient allowance

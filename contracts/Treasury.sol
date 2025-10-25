@@ -33,9 +33,7 @@ contract Treasury is AccessControl, ReentrancyGuard {
     event ProtocolWithdrawal(address indexed token, address indexed to, uint256 amount);
 
     /// @notice Emitted when creator fees are withdrawn
-    event CreatorWithdrawal(
-        uint256 indexed marketId, address indexed creator, address indexed token, uint256 amount
-    );
+    event CreatorWithdrawal(uint256 indexed marketId, address indexed creator, address indexed token, uint256 amount);
 
     /// @notice Emitted when oracle fees are withdrawn
     event OracleWithdrawal(address indexed oracle, address indexed token, uint256 amount);
