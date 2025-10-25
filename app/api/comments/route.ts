@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       .offset(offset)
 
     // Fetch all replies for these comments
-    const commentIds = topLevelComments.map(c => c.id)
+    const commentIds = topLevelComments.map((c: typeof comments.$inferSelect) => c.id)
     const replies = commentIds.length > 0
       ? await db
           .select()
@@ -44,11 +44,11 @@ export async function GET(request: NextRequest) {
 
     // Fetch user profiles for all comment authors
     const allUserAddresses = [
-      ...topLevelComments.map(c => c.userAddress),
-      ...replies.map(r => r.userAddress)
+      ...topLevelComments.map((c: typeof comments.$inferSelect) => c.userAddress),
+      ...replies.map((r: typeof comments.$inferSelect) => r.userAddress)
     ]
     // Normalize to lowercase for database query
-    const uniqueAddresses = [...new Set(allUserAddresses.map(addr => addr.toLowerCase()))]
+    const uniqueAddresses = [...new Set(allUserAddresses.map((addr: string) => addr.toLowerCase()))]
     
     const userProfiles = uniqueAddresses.length > 0
       ? await db
@@ -58,12 +58,12 @@ export async function GET(request: NextRequest) {
       : []
 
     // Create a map of address -> profile (lowercase keys for case-insensitive lookup)
-    const profileMap = new Map(
-      userProfiles.map(p => [p.walletAddress.toLowerCase(), p])
+    const profileMap = new Map<string, typeof users.$inferSelect>(
+      userProfiles.map((p: typeof users.$inferSelect) => [p.walletAddress.toLowerCase(), p])
     )
 
     // Fetch user's votes if userAddress is provided
-    const allCommentIds = [...topLevelComments.map(c => c.id), ...replies.map(r => r.id)]
+    const allCommentIds = [...topLevelComments.map((c: typeof comments.$inferSelect) => c.id), ...replies.map((r: typeof comments.$inferSelect) => r.id)]
     let userVotesSet = new Set<string>()
     
     if (userAddress && allCommentIds.length > 0) {
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
           eq(commentVotes.userAddress, normalizedUserAddress)
         ))
       
-      userVotesSet = new Set(userVotes.map(v => v.commentId))
+      userVotesSet = new Set(userVotes.map((v: typeof commentVotes.$inferSelect) => v.commentId))
     }
 
     // Helper to format comment with user data
@@ -113,10 +113,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Format comments with nested replies
-    const formattedComments = topLevelComments.map(comment => {
+    const formattedComments = topLevelComments.map((comment: typeof comments.$inferSelect) => {
       const formatted = formatComment(comment)
       formatted.replies = replies
-        .filter(r => r.parentId === comment.id)
+        .filter((r: typeof comments.$inferSelect) => r.parentId === comment.id)
         .map(formatComment)
       return formatted
     })
