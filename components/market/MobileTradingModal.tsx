@@ -85,7 +85,7 @@ export function MobileTradingModal({
 
   const loadBalance = async () => {
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
 
@@ -136,7 +136,7 @@ export function MobileTradingModal({
     setError(null)
 
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
 
@@ -257,7 +257,7 @@ export function MobileTradingModal({
     haptics.medium()
 
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
 

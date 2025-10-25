@@ -65,6 +65,7 @@ export async function GET(
 
     // Process events chronologically
     for (const event of events) {
+      if (typeof event === 'string') continue
       const { user, action, outcomeId, shares } = event.returnValues as any
       const outcomeIndex = Number(outcomeId)
       const userAddress = (user as string).toLowerCase()

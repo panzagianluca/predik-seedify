@@ -71,7 +71,7 @@ export default function UITestPage() {
     console.log('🔍 Loading shares for address:', address)
     
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
       
@@ -168,7 +168,7 @@ export default function UITestPage() {
     setBuyingMarket(market.id)
     try {
       // Dynamic import of polkamarkets-js to avoid SSR issues
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
       
@@ -300,7 +300,7 @@ export default function UITestPage() {
 
     setSellingMarket(market.id)
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
       

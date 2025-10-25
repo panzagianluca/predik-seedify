@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
     const userVolumes: Record<string, bigint> = {}
 
     for (const event of events) {
+      if (typeof event === 'string') continue
       const { user, action, value } = event.returnValues as any
       const userAddress = (user as string).toLowerCase()
       const actionValue = BigInt(value)

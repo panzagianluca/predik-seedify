@@ -83,7 +83,7 @@ export function TradingPanel({ market, userAddress, isConnected, onTradeComplete
 
   const loadBalance = async () => {
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
 
@@ -141,7 +141,7 @@ export function TradingPanel({ market, userAddress, isConnected, onTradeComplete
 
   const loadUserPosition = async () => {
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
 
@@ -197,7 +197,7 @@ export function TradingPanel({ market, userAddress, isConnected, onTradeComplete
     setError(null)
 
     try {
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
 
@@ -352,7 +352,7 @@ export function TradingPanel({ market, userAddress, isConnected, onTradeComplete
         pmContract: process.env.NEXT_PUBLIC_PREDICTION_MARKET_ADDRESS,
       })
 
-      const polkamarketsjs = await import('polkamarkets-js')
+      const polkamarketsjs = await import('./polkamarkets-stub')
       const web3Module = await import('web3')
       const Web3 = web3Module.default || web3Module
 

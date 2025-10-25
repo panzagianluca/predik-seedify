@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
 
     // Process events chronologically to calculate current holdings
     for (const event of events) {
+      if (typeof event === 'string') continue
       const { user, action, marketId, outcomeId, shares } = event.returnValues as any
       const userAddress = (user as string).toLowerCase()
       const marketIdNum = Number(marketId)

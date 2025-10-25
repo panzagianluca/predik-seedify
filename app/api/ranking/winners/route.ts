@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
     const userWinnings: Record<string, bigint> = {}
 
     for (const event of claimEvents) {
+      if (typeof event === 'string') continue
       const { user, value } = event.returnValues as any
       const userAddress = (user as string).toLowerCase()
       const winningsAmount = BigInt(value)

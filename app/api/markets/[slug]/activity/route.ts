@@ -74,6 +74,7 @@ export async function GET(
     }> = []
 
     for (const event of events) {
+      if (typeof event === 'string') continue
       const { user, action, outcomeId, shares, value, timestamp } = event.returnValues as any
       
       // Only include BUY (0) and SELL (1) actions
@@ -90,7 +91,7 @@ export async function GET(
           side: Number(action) === MarketAction.BUY ? 'Buy' : 'Sell',
           shares: amount, // Using USDT value as shares display
           timestamp: Number(timestamp),
-          txHash: event.transactionHash
+          txHash: event.transactionHash || ''
         })
       }
     }
