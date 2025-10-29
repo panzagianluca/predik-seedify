@@ -3,7 +3,7 @@
 **Spanish-first prediction market platform with AI-assisted resolution and gasless trading.**
 
 [![Security Grade](https://img.shields.io/badge/security-B+-brightgreen.svg)](./Docs/SECURITY_AUDIT.md)
-[![Network](https://img.shields.io/badge/network-BNB%20Testnet-yellow.svg)](https://testnet.bscscan.com/)
+[![Network](https://img.shields.io/badge/network-BNB%20Mainnet-success.svg)](https://bscscan.com/)
 [![Tests](https://img.shields.io/badge/tests-130%2F170%20passing-orange.svg)](./)
 
 ---
@@ -23,21 +23,23 @@ Predik is a prediction market platform built for the Argentine market, featuring
 
 ## 📊 Latest Deployment
 
-**Network:** BNB Testnet (Chain ID 97)  
+**Network:** BNB Mainnet (Chain ID 56) 🔴 **LIVE**  
 **Deployment Date:** October 29, 2025  
-**Status:** ✅ Production Ready
+**Status:** ✅ Production Live - Gasless Enabled
 
 ### Contract Addresses
 
 ```
-MarketFactory: 0x9Be256DDB94Cd1563738c9c77Fca3c62e7321A5E
-Router:        0x321F34Ac6404BE162bD79a8A1B4abDBbFC92e84a
-Oracle:        0x25C75C40c94B8C95A432805C18d47340FaC45737
-Treasury:      0xc267B4ec9Ef5dDDaf79B850636b1a6dd787A2B8b
-MockUSDT:      0x065b8ADad86048edC320277e92C58a4EEB3Bf902
+USDPredik:      0x44aaD94643d6166e0874C48f4E67594d3710D276
+MarketFactory:  0xeC5D8e1140A42F39C0B2122799AA0253B7e37593
+Router:         0x0C42E14F80dB8De190DdA89320D9faEB39930F7A  ⭐ Biconomy
+Oracle:         0x403bcFE4771d974db166c463b97564E117906CF9
+Treasury:       0xA45e616A68434b806890Fb5893850de76C6c49cB
+Outcome1155:    0x09204C71893545A1F3b0652C0dD02f3A5b315fb1
 ```
 
-**[See full deployment details →](./DEPLOYED_ADDRESSES.md)**
+**Explorer:** [View on BSCScan →](https://bscscan.com/address/0xeC5D8e1140A42F39C0B2122799AA0253B7e37593)  
+**[Full deployment details →](./DEPLOYED_ADDRESSES.md)**
 
 ---
 

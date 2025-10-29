@@ -425,21 +425,88 @@ outcome1155.grantRole(DEFAULT_ADMIN_ROLE, address(factory));
 
 ---
 
-## Phase 2 — Testnet Deployment & Services (Days 3‑5) ✅ COMPLETED
+## Phase 2 — Mainnet Deployment & Services (Oct 29, 2025) ✅ COMPLETED
 
-**Status:** ✅ **COMPLETE** (All contracts deployed with security fixes, verified, and tested)
+**Status:** ✅ **COMPLETE** (All contracts deployed to BNB MAINNET with security fixes)
 
-**Latest Deployment:** October 29, 2025 (with external audit fixes)
+**🔴 MAINNET DEPLOYMENT:** October 29, 2025 (Block 66347803)
 
 **Deployment Summary:**
-- ✅ All 6 contracts deployed to BNB Testnet (Chain ID 97) - **October 29, 2025**
-- ✅ All contracts verified on BSCScan Testnet
-- ✅ Post-deployment security configuration complete (7 role grants)
-- ✅ First test market created successfully
+- ✅ All 6 contracts deployed to **BNB Mainnet (Chain ID 56)** - **PRODUCTION LIVE**
 - ✅ All security fixes from external audit implemented
-- ✅ ABIs exported to `lib/abis/` directory
+- ✅ Post-deployment security configuration complete (7 role grants)
+- ✅ Deployment cost: 0.00062059885 BNB (~$0.68 USD)
+- ✅ All transactions atomic (same block 66347803)
+- ⏳ Contract verification on BSCScan pending
+- ⏳ ABIs exported to `lib/abis/` directory
 
-**Latest Contract Addresses (October 29, 2025):**
+**🔴 MAINNET Contract Addresses (Chain ID 56):**
+- **USDPredik:** `0x44aaD94643d6166e0874C48f4E67594d3710D276` ⭐ Platform Token
+- **Outcome1155:** `0x09204C71893545A1F3b0652C0dD02f3A5b315fb1` (ERC-1155 shares)
+- **Treasury:** `0xA45e616A68434b806890Fb5893850de76C6c49cB` (Fee collection)
+- **Router:** `0x0C42E14F80dB8De190DdA89320D9faEB39930F7A` ⭐ **BICONOMY ENTRYPOINT**
+- **Oracle:** `0x403bcFE4771d974db166c463b97564E117906CF9` (DelphAI integration)
+- **MarketFactory:** `0xeC5D8e1140A42F39C0B2122799AA0253B7e37593` (Market creation)
+
+**Explorer Links:**
+- **BSCScan:** https://bscscan.com/address/0xeC5D8e1140A42F39C0B2122799AA0253B7e37593
+
+**Deployment Statistics:**
+- **Total Gas Used:** 12,411,977 gas
+- **Gas Price:** 0.05 gwei
+- **Total Cost:** 0.00062059885 BNB ($0.68 USD at deployment)
+- **Deployer Wallet:** 0x39B55885B52F9b522619C4fdd1025709B1Ae4Ad7
+- **Deployment Block:** 66347803 (all contracts atomic)
+
+**Security Configuration (7 Role Grants) ✅:**
+- ✅ **Config 1/7:** Router set in Outcome1155
+- ✅ **Config 2/7:** Factory granted DEFAULT_ADMIN_ROLE on Outcome1155
+- ✅ **Config 3/7:** Factory granted DEFAULT_ADMIN_ROLE on Router
+- ✅ **Config 4/7:** Factory granted DEFAULT_ADMIN_ROLE on Oracle
+- ✅ **Config 5/7:** Factory granted MARKET_MANAGER_ROLE on Treasury
+- ✅ **Config 6/7:** Factory granted FEE_REPORTER_ROLE on Treasury
+- ✅ **Config 7/7:** Deployer granted FEE_WITHDRAWER_ROLE on Treasury
+
+**Why Mainnet?**
+- Biconomy gasless transactions ONLY work on mainnet networks (not testnet)
+- BNB Chain mainnet has production-grade infrastructure
+- Security audit fixes implemented and tested
+- Ready for public use
+
+**Security Posture:**
+- **Overall Grade:** B+ (acceptable for mainnet)
+- **Critical Issues:** 0 (all fixed)
+- **High Issues:** 0 (all fixed)
+- **Emergency Safeguards:** 48H oracle delay + 7-day user withdrawal
+- **Admin Controls:** Centralized (acceptable for launch, recommend multisig at $100K TVL)
+
+**Critical Deployment Notes:**
+- 🔍 Post-deployment permission configuration is CRITICAL
+- 🔍 MarketFactory requires DEFAULT_ADMIN_ROLE on Outcome1155, Router, Treasury, Oracle
+- 🔍 USDPredik (formerly MockUSDT) deployed with 1M token supply
+- 🔍 Faucet available: 10,000 USDp per claim, 1-hour cooldown
+- 🔍 Fee separation: FEE_REPORTER (Factory) vs FEE_WITHDRAWER (Admin)
+
+**Next Steps:**
+- [ ] Verify contracts on BSCScan mainnet
+- [ ] Configure Biconomy dashboard (Router: 0x0C42E14F80dB8De190DdA89320D9faEB39930F7A)
+- [ ] Update frontend .env.local with mainnet addresses
+- [ ] Mint USDPredik for market seeding
+- [ ] Create initial 10 Argentine markets
+- [ ] Test gasless trading end-to-end
+
+---
+
+### 📜 Legacy Testnet Deployment (Archived)
+
+<details>
+<summary>Click to view testnet deployment history (October 24-29, 2025)</summary>
+
+**Status:** ✅ COMPLETE (Superseded by mainnet deployment)
+
+**Latest Testnet Deployment:** October 29, 2025 (with external audit fixes)
+
+**Testnet Contract Addresses (Chain ID 97):**
 - **MarketFactory:** `0x9Be256DDB94Cd1563738c9c77Fca3c62e7321A5E`
 - **MockUSDT:** `0x065b8ADad86048edC320277e92C58a4EEB3Bf902`
 - **Outcome1155:** `0xB5c0e214F8D3f3f1DA4897418AC4C4458ee420c0`
@@ -447,58 +514,62 @@ outcome1155.grantRole(DEFAULT_ADMIN_ROLE, address(factory));
 - **Treasury:** `0xc267B4ec9Ef5dDDaf79B850636b1a6dd787A2B8b`
 - **Oracle:** `0x25C75C40c94B8C95A432805C18d47340FaC45737`
 
-**First Test Market Created:**
+**Testing Results:**
+- ✅ All contracts verified on BSCScan Testnet
+- ✅ Market creation tested successfully
+- ✅ Trading tested (buy/sell shares executed)
+- ✅ Prices correctly calculated (50/50 → 50.12/49.88)
+- ✅ Fee mechanism working (~3 USDT round-trip fees)
+- ✅ Gas costs: ~318K gas (~$0.17 for full round-trip)
+
+**First Test Market:**
 - **Market ID:** 0
 - **Address:** `0xD4646283c2e5A686AdD3E74E920F3dfB906116E0`
 - **Question:** "Will Bitcoin reach $100,000 by end of 2025?"
-- **Outcomes:** Yes (50%), No (50%)
-- **Initial Liquidity:** 1,000 USDT
 - **BSCScan:** https://testnet.bscscan.com/address/0xD4646283c2e5A686AdD3E74E920F3dfB906116E0
 
-**Critical Lessons Learned:**
-- 🔍 Post-deployment permission configuration is CRITICAL
-- 🔍 MarketFactory requires DEFAULT_ADMIN_ROLE on Outcome1155, Router, Treasury, Oracle
-- 🔍 Error messages can be misleading - always check full trace
-- 🔍 See `Docs/DEPLOYMENT_TROUBLESHOOTING.md` for detailed troubleshooting guide
+</details>
 
-**Task 4: Deploy contracts to BNB Testnet** ✅ COMPLETE
-  - ✅ Deployment script created (`script/DeployBNBTestnet.s.sol`)
+---
+
+**Task 4: Deploy contracts to BNB Mainnet** ✅ COMPLETE
+  - ✅ Deployment script created (`script/DeployBNBMainnet.s.sol`)
+    - ✅ Chain ID validation (requires 56, not 97)
     - ✅ LMSR `b` parameter configured (1000 USDT per market)
-    - ✅ DelphAI oracle address set: `0xA95E99848a318e37F128aB841b0CF693c1f0b4D1`
+    - ✅ DelphAI oracle address set (same as testnet)
     - ✅ Treasury fee split configured (60/30/10)
   - ✅ All contracts deployed in correct order:
-    1. ✅ MockUSDT deployed and verified
-    2. ✅ Outcome1155 deployed and verified
-    3. ✅ Treasury deployed and verified
-    4. ✅ Router deployed and verified
-    5. ✅ Oracle deployed and verified (DelphAI integration ready)
-    6. ✅ MarketFactory deployed and verified
-    7. ✅ First LMSRMarket created via factory (Market ID 0)
-  - ✅ All deployed addresses recorded in `.env.local`
-  - ✅ All contracts verified on BSCScan Testnet
-  - ✅ ABIs exported to `lib/abis/` (MarketFactory, LMSRMarket, MockUSDT)
-  - ✅ Market creation tested and working (`script/TestMarketCreation.s.sol`)
-  - ✅ **Trading tested and working** (`script/TestTrade.s.sol`)
-    - ✅ Buy shares: 10 shares purchased for 5 USDT (tx: 0x9ab49902...)
-    - ✅ Sell shares: 5 shares sold for 2 USDT (tx: 0xc11f43a9...)
-    - ✅ Price impact verified: Yes moved from 50% to 50.12%
-    - ✅ Fee mechanism working: ~3 USDT round-trip fees
-    - ✅ Gas costs: ~318K gas total (~$0.17)
+    1. ✅ USDPredik deployed (1M supply, 6 decimals)
+    2. ✅ Outcome1155 deployed
+    3. ✅ Router deployed (Biconomy entrypoint)
+    4. ✅ Treasury deployed (fee collection)
+    5. ✅ Oracle deployed (DelphAI integration)
+    6. ✅ MarketFactory deployed
+  - ✅ All 7 role grants configured correctly
+  - ✅ All deployed addresses recorded in DEPLOYED_ADDRESSES.md
+  - ✅ Deployment transaction hashes in `broadcast/DeployBNBMainnet.s.sol/56/run-latest.json`
+  - ⏳ Contract verification pending (BSCScan API)
+  - ⏳ Export ABIs to `lib/abis/` directory
 
-- [ ] Task 5: Configure Biconomy (**Update**: Using Super Transactions API) ⏳ IN PROGRESS
-  - ✅ Biconomy config updated to use Supertransaction API
-  - ✅ API Key and Project ID configured in `.env.local`
-  - [ ] Configure paymaster sponsorship policies in dashboard (manual step)
-  - [ ] Whitelist contract methods for gasless transactions
-  - [ ] Test sponsored UserOp flow using Biconomy Supertransaction API
+- [ ] Task 5: Configure Biconomy ⏳ NEXT
+  - [ ] Dashboard: https://dashboard.biconomy.io/
+  - [ ] Network: BNB Mainnet (Chain 56)
+  - [ ] Smart Contract: Router 0x0C42E14F80dB8De190DdA89320D9faEB39930F7A
+  - [ ] Whitelist methods:
+    - `buyWithPermit(address,uint8,uint256,uint256,uint256,uint8,bytes32,bytes32)`
+    - `sellAndTransfer(address,uint8,uint256,uint256,address)`
+    - `claim(address,address)`
+  - [ ] Configure paymaster sponsorship policies
+  - [ ] Fund gas tank with BNB
+  - [ ] Test sponsored UserOp flow
 
 - ✅ Task 6: Configure Privy **COMPLETE**
   - ✅ App created with Google + Email login
   - ✅ Callback URLs set (localhost, Vercel preview, production)
   - ✅ App ID & secret stored in environment variables
-  - ✅ Privy config updated for BNB Testnet
-  - ✅ Web3Provider already wraps app with PrivyProvider
-  - ✅ ConnectButton ("Acceder") already uses Privy
+  - ✅ Privy config updated for BNB Mainnet (Chain 56)
+  - ✅ Web3Provider wraps app with PrivyProvider
+  - ✅ ConnectButton ("Acceder") uses Privy
   - [ ] Test login flow on BNB Testnet (ready for manual testing)
 
 - [ ] Task 7: Test DelphAI Oracle Integration (**DelphAI Now Live**)

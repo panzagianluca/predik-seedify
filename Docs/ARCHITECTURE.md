@@ -1709,71 +1709,93 @@ By end of hackathon, you should have:
 
 ---
 
-## 🚀 Deployment Status (October 25, 2025)
+## 🚀 Deployment Status (October 29, 2025)
 
-### BNB Testnet Deployment - COMPLETE ✅
+### 🔴 BNB MAINNET DEPLOYMENT - LIVE ✅
+
+**Network:** BNB Smart Chain Mainnet (Chain ID 56) 🔴 **PRODUCTION**  
+**Deployment Date:** October 29, 2025 (Block 66347803)  
+**Status:** All contracts deployed, configured, and production-ready  
+**Deployment Cost:** 0.00062059885 BNB (~$0.68 USD at 50 gwei)
+
+**Deployed Contracts (Mainnet):**
+- **USDPredik:** `0x44aaD94643d6166e0874C48f4E67594d3710D276` ⭐ Platform Token (1M supply)
+- **Outcome1155:** `0x09204C71893545A1F3b0652C0dD02f3A5b315fb1` (ERC-1155 shares)
+- **Treasury:** `0xA45e616A68434b806890Fb5893850de76C6c49cB` (Fee collection)
+- **Router:** `0x0C42E14F80dB8De190DdA89320D9faEB39930F7A` ⭐ **BICONOMY ENTRYPOINT**
+- **Oracle:** `0x403bcFE4771d974db166c463b97564E117906CF9` (DelphAI integration)
+- **MarketFactory:** `0xeC5D8e1140A42F39C0B2122799AA0253B7e37593` (Market creation)
+
+**Explorer Links:**
+- **MarketFactory:** [View on BSCScan →](https://bscscan.com/address/0xeC5D8e1140A42F39C0B2122799AA0253B7e37593)
+- **USDPredik:** [View on BSCScan →](https://bscscan.com/address/0x44aaD94643d6166e0874C48f4E67594d3710D276)
+- **Router (Biconomy):** [View on BSCScan →](https://bscscan.com/address/0x0C42E14F80dB8De190DdA89320D9faEB39930F7A)
+
+**Deployment Statistics:**
+- **Total Gas Used:** 12,411,977 gas
+- **Gas Price:** 0.05 gwei (0.00000005 BNB)
+- **Total Cost:** 0.00062059885 BNB ($0.68 USD)
+- **Deployment Block:** 66347803 (all contracts atomic)
+- **Deployer Wallet:** 0x39B55885B52F9b522619C4fdd1025709B1Ae4Ad7
+
+**Security Configuration (7 Role Grants) ✅:**
+- ✅ **Config 1/7:** Router set in Outcome1155
+- ✅ **Config 2/7:** Factory granted DEFAULT_ADMIN_ROLE on Outcome1155
+- ✅ **Config 3/7:** Factory granted DEFAULT_ADMIN_ROLE on Router
+- ✅ **Config 4/7:** Factory granted DEFAULT_ADMIN_ROLE on Oracle
+- ✅ **Config 5/7:** Factory granted MARKET_MANAGER_ROLE on Treasury
+- ✅ **Config 6/7:** Factory granted FEE_REPORTER_ROLE on Treasury
+- ✅ **Config 7/7:** Deployer granted FEE_WITHDRAWER_ROLE on Treasury
+
+**Key Features:**
+- ✅ **Gasless Trading:** All trades via Router (Biconomy compatible)
+- ✅ **Fee Separation:** FEE_REPORTER (Factory) vs FEE_WITHDRAWER (Admin)
+- ✅ **Emergency Safeguards:** 48H oracle delay + 7-day user withdrawal
+- ✅ **Router Timelock:** 48H delay on router upgrades
+- ✅ **USDPredik Faucet:** 10,000 USDp per claim, 1-hour cooldown
+
+**Contract Verification Status:**
+- ⏳ Pending verification on BSCScan mainnet
+- Transaction hashes in `broadcast/DeployBNBMainnet.s.sol/56/run-latest.json`
+
+**Next Steps:**
+- [ ] Verify contracts on BSCScan mainnet
+- [ ] Configure Biconomy dashboard (Router: 0x0C42E14F80dB8De190DdA89320D9faEB39930F7A)
+- [ ] Update frontend .env.local with mainnet addresses
+- [ ] Mint USDPredik for market seeding
+- [ ] Create initial 10 Argentine markets
+- [ ] Test gasless trading end-to-end
+
+---
+
+### 📜 Legacy BNB Testnet Deployment (Archived)
+
+<details>
+<summary>Click to view testnet deployment details (October 24-25, 2025)</summary>
 
 **Network:** BNB Smart Chain Testnet (Chain ID 97)  
 **Deployment Date:** October 24-25, 2025  
-**Status:** All contracts deployed, verified, and tested
+**Status:** ✅ Complete (Superseded by mainnet)
 
-**Deployed Contracts:**
-- **MarketFactory:** `0x5c4850878F222aC16d5ab60204997b904Fe4019A` ✅ Verified
-- **MockUSDT:** `0x4410355e143112e0619f822fC9Ecf92AaBd01b63` ✅ Verified
-- **Outcome1155:** `0x6fd2258e61bB5eedF5606edA7F70Be06C5374f29` ✅ Verified
-- **Router:** `0x756039D9b6E99d4EF0538A04B4c9E13D61f5d991` ✅ Verified
-- **Treasury:** `0xF4F2bfa1d465fc88F7a987F4B7D3F4ED351f83a1` ✅ Verified
-- **Oracle:** `0x3b1d38fc5357079150eD50bD5a3d95ebdB08BBF4` ✅ Verified
+**Deployed Contracts (Testnet):**
+- **MarketFactory:** `0x5c4850878F222aC16d5ab60204997b904Fe4019A`
+- **MockUSDT:** `0x4410355e143112e0619f822fC9Ecf92AaBd01b63`
+- **Outcome1155:** `0x6fd2258e61bB5eedF5606edA7F70Be06C5374f29`
+- **Router:** `0x756039D9b6E99d4EF0538A04B4c9E13D61f5d991`
+- **Treasury:** `0xF4F2bfa1d465fc88F7a987F4B7D3F4ED351f83a1`
+- **Oracle:** `0x3b1d38fc5357079150eD50bD5a3d95ebdB08BBF4`
 
-**First Market Created:**
-- **Market ID:** 0
-- **Address:** `0x2935645910f2773dc3f76A2Ec38594344618CF28`
-- **Question:** "Will Bitcoin reach $100,000 by end of 2025?"
-- **Initial Liquidity:** 1,000 USDT
-- **BSCScan:** https://testnet.bscscan.com/address/0x2935645910f2773dc3f76A2Ec38594344618CF28
-
-**Verification:**
+**Testing Results:**
 - ✅ All contracts verified on BSCScan Testnet
-- ✅ Market creation tested and working
-- ✅ **Trading tested and working** (buy/sell shares successfully executed)
-- ✅ Prices correctly calculated (50/50 initial → 50.12/49.88 after trades)
-- ✅ Fee mechanism working correctly (~3 USDT round-trip fees)
-- ✅ All permissions configured correctly
-- ✅ ABIs exported to `lib/abis/`
+- ✅ Market creation tested successfully
+- ✅ Trading tested (buy/sell shares executed)
+- ✅ Prices correctly calculated (50/50 → 50.12/49.88)
+- ✅ Fee mechanism working (~3 USDT round-trip fees)
+- ✅ Gas costs: ~318K gas (~$0.17 per round-trip)
 
-**Trade Test Results:**
-- ✅ Bought 10 shares for 5 USDT (tx: `0x9ab49902...`)
-- ✅ Sold 5 shares for 2 USDT (tx: `0xc11f43a9...`)
-- ✅ Price impact: Yes moved from 50% → 50.12%
-- ✅ Gas costs: ~318K gas (~$0.17 for full round-trip)
+**Note:** Testnet deployment used for testing and development. All production traffic uses mainnet deployment above.
 
-**Critical Deployment Notes:**
-- Post-deployment permission configuration is CRITICAL
-- MarketFactory requires DEFAULT_ADMIN_ROLE on: Outcome1155, Router, Treasury, Oracle
-- See `Docs/DEPLOYMENT_TROUBLESHOOTING.md` for detailed lessons learned
-- Permission verification script recommended: `scripts/verify-permissions.sh`
-
-**Contract Function Signatures (Important for Frontend):**
-```solidity
-// Trading functions take SHARES as input, not USDT amounts
-function buy(uint8 outcomeId, uint256 deltaShares) external returns (uint256 totalPaid);
-function sell(uint8 outcomeId, uint256 deltaShares) external returns (uint256 netPayout);
-
-// Preview functions return costs/payouts in USDT (6 decimals)
-function previewBuy(uint8 outcomeId, uint256 deltaShares) 
-    external view returns (uint256 tradeCost, uint256 fee, uint256 totalCost);
-function previewSell(uint8 outcomeId, uint256 deltaShares) 
-    external view returns (uint256 tradePayout, uint256 fee, uint256 netPayout);
-
-// Shares: 18 decimals (UD60x18)
-// USDT: 6 decimals (collateral token)
-```
-
-**Next Steps:**
-- [ ] Configure Biconomy paymaster for gasless transactions
-- [ ] Integrate DelphAI oracle for resolution (contract ready at `0xA95E...b4D1`)
-- [ ] Frontend migration to use deployed contracts
-- [ ] Test full market lifecycle (create → trade → resolve → claim)
+</details>
 
 ---
 
