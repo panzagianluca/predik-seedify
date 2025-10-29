@@ -1,0 +1,31 @@
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
+.next
+node_modules
+
+# 🔒 NEVER COMMIT THESE - CONTAIN PRIVATE KEYS/SECRETS!
+.env
+.env.*
+.env.local
+.env*.local
+*.env
+*.env.local
+
+# 🔒 NO MARKDOWN FILES WITH KEYS (just in case)
+deployment.log
+*.key
+*.pem
+secrets.md
+
+scripts/seed-proposals.mjs
+
+# Foundry cache and artifacts
+cache/
+out/
+broadcast/
+
+# Build artifacts
+dist/
+build/

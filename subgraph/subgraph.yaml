@@ -1,0 +1,60 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  # MarketFactory - Creates new markets
+  - kind: ethereum
+    name: MarketFactory
+    network: chapel
+    source:
+      address: "0xB8ddC4A144A16eF648d606Bc8041D67a4aDBe04f"
+      abi: MarketFactory
+      startBlock: 70107780
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Market
+        - User
+      abis:
+        - name: MarketFactory
+          file: ../out/MarketFactory.sol/MarketFactory.json
+        - name: LMSRMarket
+          file: ../out/LMSRMarket.sol/LMSRMarket.json
+      eventHandlers:
+        - event: MarketCreated(indexed uint256,indexed address,indexed address,string,string,string,string,string[],uint64,uint256)
+          handler: handleMarketCreated
+      file: ./src/market-factory.ts
+
+templates:
+  # LMSRMarket - Individual market instances
+  - kind: ethereum
+    name: LMSRMarket
+    network: chapel
+    source:
+      abi: LMSRMarket
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Market
+        - Trade
+        - Position
+        - User
+      abis:
+        - name: LMSRMarket
+          file: ../out/LMSRMarket.sol/LMSRMarket.json
+      eventHandlers:
+        - event: Buy(indexed address,indexed uint8,uint256,uint256,uint256)
+          handler: handleBuy
+        - event: Sell(indexed address,indexed uint8,uint256,uint256,uint256)
+          handler: handleSell
+        - event: Resolved(indexed uint8,bool)
+          handler: handleResolved
+        - event: MarketFinalized(indexed uint256,uint8,bool)
+          handler: handleMarketFinalized
+        - event: Redeemed(indexed address,indexed uint8,uint256,uint256)
+          handler: handleRedeemed
+      file: ./src/lmsr-market.ts

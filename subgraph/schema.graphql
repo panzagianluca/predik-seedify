@@ -1,0 +1,140 @@
+"""
+Market entity - Represents a prediction market
+"""
+type Market @entity(immutable: false) {
+  id: ID! # Market address
+  marketId: BigInt! # Factory market ID
+  creator: User!
+  title: String!
+  description: String! # Resolution criteria and detailed description
+  category: String! # Sports, Politics, Economy, Culture, etc.
+  imageUrl: String # Optional market image URL
+  outcomes: [String!]!
+  
+  # Timestamps
+  createdAt: BigInt!
+  tradingEndsAt: BigInt!
+  
+  # Market parameters
+  liquidityParameter: BigInt!
+  outcomeCount: Int!
+  
+  # State
+  state: MarketState!
+  winningOutcome: Int
+  invalid: Boolean!
+  resolved: Boolean!
+  finalizedAt: BigInt
+  
+  # Statistics
+  totalVolume: BigInt!
+  totalTrades: Int!
+  uniqueTraders: Int!
+  
+  # Relations
+  trades: [Trade!]! @derivedFrom(field: "market")
+  positions: [Position!]! @derivedFrom(field: "market")
+  
+  # Prices (updated on each trade)
+  prices: [BigInt!]! # UD60x18 format (18 decimals)
+}
+
+enum MarketState {
+  Trading
+  Resolving
+  Finalized
+}
+
+"""
+User entity - Tracks traders and creators
+"""
+type User @entity(immutable: false) {
+  id: ID! # Wallet address (lowercase)
+  
+  # Activity
+  marketsCreated: [Market!]! @derivedFrom(field: "creator")
+  trades: [Trade!]! @derivedFrom(field: "trader")
+  positions: [Position!]! @derivedFrom(field: "user")
+  
+  # Statistics
+  totalVolume: BigInt!
+  totalTrades: Int!
+  marketsTraded: Int!
+  winnings: BigInt!
+  
+  # Timestamps
+  firstTradeAt: BigInt
+  lastTradeAt: BigInt
+}
+
+"""
+Trade entity - Individual buy/sell transactions
+"""
+type Trade @entity(immutable: true) {
+  id: ID! # Transaction hash + log index
+  market: Market!
+  trader: User!
+  
+  # Trade details
+  type: TradeType!
+  outcomeIndex: Int!
+  shares: BigInt! # UD60x18 format
+  amount: BigInt! # USDT amount (6 decimals)
+  fee: BigInt! # USDT fee (6 decimals)
+  
+  # Price at time of trade
+  price: BigInt! # UD60x18 format (0-1)
+  
+  # Timestamp
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
+enum TradeType {
+  Buy
+  Sell
+}
+
+"""
+Position entity - User's holdings in a market
+"""
+type Position @entity(immutable: false) {
+  id: ID! # Market address + user address + outcome index
+  market: Market!
+  user: User!
+  outcomeIndex: Int!
+  
+  # Holdings
+  shares: BigInt! # UD60x18 format
+  
+  # Cost basis
+  totalInvested: BigInt! # USDT (6 decimals)
+  averageBuyPrice: BigInt! # UD60x18 format
+  
+  # Realized P&L
+  realizedProfit: BigInt! # Can be negative
+  
+  # Status
+  redeemed: Boolean!
+  redeemedAt: BigInt
+  redeemedAmount: BigInt
+  
+  # Timestamps
+  firstTradeAt: BigInt!
+  lastTradeAt: BigInt!
+}
+
+"""
+Global statistics
+"""
+type GlobalStats @entity(immutable: false) {
+  id: ID! # Always "1"
+  
+  totalMarkets: Int!
+  totalVolume: BigInt!
+  totalTrades: Int!
+  totalUsers: Int!
+  
+  lastUpdated: BigInt!
+}
